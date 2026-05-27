@@ -523,7 +523,7 @@ const V = ({v}) => {
 
 /* ═══ MAIN APP ═══ */
 function App({ ch, setCh }) {
-  const [tab, setTab] = useState("char");
+  const [tab, setTab] = useState("compact");
   const [coll, setColl] = useState({});
   const [flt, setFlt] = useState("");
   const [msg, setMsg] = useState(null);
@@ -1896,6 +1896,78 @@ async function deleteCharFile(dirHandle, filename){
   catch (e) { if (e.name !== "NotFoundError") console.warn("Delete fallita:", filename, e); }
 }
 
+/* ─── Campagne: sottocartelle della cartella root ─── */
+
+// Nome cartella sicuro per il filesystem
+function sanitizeFolderName(name){
+  const s = (name || "campagna").toString()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  return s || "campagna";
+}
+
+// Elenca le sottocartelle (= campagne) della cartella root
+async function listCampaignFolders(rootHandle){
+  const out = [];
+  for await (const entry of rootHandle.values()) {
+    if (entry.kind === "directory") out.push(entry.name);
+  }
+  return out.sort(function(a,b){ return a.localeCompare(b); });
+}
+
+// Elenca i .json di livello root (PG "senza campagna", candidati alla migrazione)
+async function listRootCharFiles(rootHandle){
+  const out = [];
+  for await (const entry of rootHandle.values()) {
+    if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".json") && !isBackupFile(entry.name)) {
+      try {
+        const file = await entry.getFile();
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data && typeof data === "object" && (data.stats || data.classes || data.name !== undefined)) {
+          out.push({ filename: entry.name, data: data });
+        }
+      } catch (e) { /* skip */ }
+    }
+  }
+  return out;
+}
+
+// Sposta tutti i .json di root (e i loro backup) in una sottocartella esistente o nuova
+async function migrateRootToCampaign(rootHandle, campaignFolderName){
+  const camp = await rootHandle.getDirectoryHandle(campaignFolderName, { create: true });
+  let moved = 0;
+  // Raccogli prima i nomi (non si può iterare e modificare contemporaneamente)
+  const filesToMove = [];
+  for await (const entry of rootHandle.values()) {
+    if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".json")) {
+      filesToMove.push(entry.name);
+    }
+  }
+  for (const fname of filesToMove) {
+    try {
+      // Leggi il contenuto dal file root
+      const srcFh = await rootHandle.getFileHandle(fname, { create: false });
+      const srcFile = await srcFh.getFile();
+      const text = await srcFile.text();
+      // Scrivi nella sottocartella campagna
+      const dstFh = await camp.getFileHandle(fname, { create: true });
+      const w = await dstFh.createWritable();
+      await w.write(text);
+      await w.close();
+      // Cancella l'originale
+      await rootHandle.removeEntry(fname);
+      moved++;
+    } catch (e) {
+      console.warn("Migrazione fallita per", fname, e);
+    }
+  }
+  return { campaignFolderName: campaignFolderName, moved: moved };
+}
+
 /* ═══════════════════════════════════════════════════════════════
    COMPONENTE Dashboard
    ═══════════════════════════════════════════════════════════════ */
@@ -1905,6 +1977,20 @@ function Dashboard(){
   const [fileMap, setFileMap]     = useState({});      // id → filename su disco
   const [activeId, setActiveId]   = useState(null);
   const [dirHandle, setDirHandle] = useState(null);
+  // Campagne
+  // campaigns: [{ folderName: string }]  — il folderName fa anche da id ed è ciò che vedi
+  const [campaigns, setCampaigns] = useState([]);
+  const [activeCampaign, setActiveCampaign] = useState(null); // string folderName | null
+  // Dati di tutte le campagne caricate in memoria
+  // rostersByCamp: { [folderName]: { [pgId]: char } }
+  // ordersByCamp:  { [folderName]: [pgId, ...] }
+  // fileMapsByCamp:{ [folderName]: { [pgId]: filename } }
+  const [rostersByCamp, setRostersByCamp]   = useState({});
+  const [ordersByCamp, setOrdersByCamp]     = useState({});
+  const [fileMapsByCamp, setFileMapsByCamp] = useState({});
+  // Migration prompt
+  const [migrationPrompt, setMigrationPrompt] = useState(null);  // {files: [...]}
+
   const [bootDone, setBootDone]   = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle"); // idle|pending|saving|saved|error|lsonly
   const [errorMsg, setErrorMsg]   = useState(null);
@@ -1920,6 +2006,8 @@ function Dashboard(){
   const postBoot    = useRef(false);
   const saveTimer   = useRef(null);
   const fileInputRef= useRef(null);
+  // Cache delle sottocartelle aperte: { [folderName]: FileSystemDirectoryHandle }
+  const campaignHandlesRef = useRef({});
 
   // Storia undo/redo per-PG: { [id]: { past: [snapshot...], future: [snapshot...] } }
   // Gli snapshot sono copie JSON della scheda. Limite di profondità per non gonfiare la RAM.
@@ -1944,28 +2032,78 @@ function Dashboard(){
           catch (e) { console.warn("IDB get fallito:", e); }
         }
 
-        // 2. Se ho handle, prova a caricare da disco
+        // Recupera la campagna attiva ricordata (se c'è)
+        let rememberedCampaign = null;
+        try {
+          const lastCamp = localStorage.getItem("activeCampaign_v4");
+          if (lastCamp) rememberedCampaign = lastCamp;
+        } catch(e){}
+
+        // 2. Se ho handle, prova a caricare da disco — multi-campagna
         if (handle) {
           const ok = await ensurePermission(handle, "readwrite");
           if (cancelled) return;
           if (ok) {
             try {
-              const files = await listCharFiles(handle);
+              // Enumera sottocartelle (= campagne) e file JSON di root (= candidati migrazione)
+              const folderNames = await listCampaignFolders(handle);
+              const rootFiles = await listRootCharFiles(handle);
               if (cancelled) return;
-              const r = {}, o = [], fm = {};
-              files.forEach(function(f){
-                const id = (f.data && f.data._dashboardId) || genId();
-                const cleaned = Object.assign({}, f.data);
-                delete cleaned._dashboardId;
-                r[id] = cleaned;
-                o.push(id);
-                fm[id] = f.filename;
-              });
-              setRoster(r);
-              setOrder(o);
-              setFileMap(fm);
+
+              const rByC = {}; const oByC = {}; const fmByC = {};
+              const camps = [];
+              for (const folderName of folderNames) {
+                try {
+                  const sub = await handle.getDirectoryHandle(folderName, { create: false });
+                  campaignHandlesRef.current[folderName] = sub;
+                  const files = await listCharFiles(sub);
+                  const r = {}, o = [], fm = {};
+                  files.forEach(function(f){
+                    const id = (f.data && f.data._dashboardId) || genId();
+                    const cleaned = Object.assign({}, f.data);
+                    delete cleaned._dashboardId;
+                    r[id] = cleaned; o.push(id); fm[id] = f.filename;
+                  });
+                  rByC[folderName] = r;
+                  oByC[folderName] = o;
+                  fmByC[folderName] = fm;
+                  camps.push({ folderName: folderName });
+                } catch (e) {
+                  console.warn("Sottocartella", folderName, "non leggibile:", e);
+                }
+              }
+
+              setCampaigns(camps);
+              setRostersByCamp(rByC);
+              setOrdersByCamp(oByC);
+              setFileMapsByCamp(fmByC);
               setDirHandle(handle);
-              if (o.length > 0) setActiveId(o[0]);
+
+              // Scegli campagna attiva
+              let chosen = null;
+              if (rememberedCampaign && camps.find(function(c){return c.folderName===rememberedCampaign;})) {
+                chosen = rememberedCampaign;
+              } else if (camps.length > 0) {
+                chosen = camps[0].folderName;
+              }
+
+              if (chosen) {
+                setActiveCampaign(chosen);
+                setRoster(rByC[chosen] || {});
+                setOrder(oByC[chosen] || []);
+                setFileMap(fmByC[chosen] || {});
+                const ord = oByC[chosen] || [];
+                if (ord.length > 0) setActiveId(ord[0]);
+              }
+
+              // Se ci sono .json di root → proponi migrazione
+              if (rootFiles.length > 0) {
+                setMigrationPrompt({
+                  files: rootFiles.map(function(f){ return f.filename; }),
+                  rootFiles: rootFiles
+                });
+              }
+
               loadedFromFS = true;
               setSaveStatus("saved");
             } catch (e) {
@@ -1979,43 +2117,81 @@ function Dashboard(){
           }
         }
 
-        // 3. Fallback: localStorage (v2 → v1 → singolo)
+        // 3. Fallback: localStorage — supporta formato v4 (multi-campagna), v2, v1, single
         if (!loadedFromFS) {
           try {
             const raw = localStorage.getItem(STORAGE_KEY);
+            let restored = false;
             if (raw) {
               const p = JSON.parse(raw);
-              if (p && p.roster && p.order) {
-                setRoster(p.roster);
-                setOrder(p.order);
-                setFileMap(p.fileMap || {});
-                if (p.activeId && p.roster[p.activeId]) setActiveId(p.activeId);
-                else if (p.order[0]) setActiveId(p.order[0]);
-                if (!handle) setSaveStatus(fsaSupported ? "idle" : "lsonly");
+              // Formato v4
+              if (p && p.version === 4 && p.campaigns && p.rostersByCamp) {
+                setCampaigns(p.campaigns || []);
+                setRostersByCamp(p.rostersByCamp || {});
+                setOrdersByCamp(p.ordersByCamp || {});
+                setFileMapsByCamp(p.fileMapsByCamp || {});
+                let chosen = (p.activeCampaign && p.rostersByCamp[p.activeCampaign]) ? p.activeCampaign : (p.campaigns[0] && p.campaigns[0].folderName);
+                if (chosen) {
+                  setActiveCampaign(chosen);
+                  setRoster(p.rostersByCamp[chosen] || {});
+                  setOrder(p.ordersByCamp[chosen] || []);
+                  setFileMap(p.fileMapsByCamp[chosen] || {});
+                  const ord = p.ordersByCamp[chosen] || [];
+                  const aid = (p.activeId && (p.rostersByCamp[chosen] || {})[p.activeId]) ? p.activeId : (ord[0] || null);
+                  if (aid) setActiveId(aid);
+                }
+                restored = true;
               }
-            } else {
+              // Formato v2 / v3 (single roster) → migra a "Default"
+              if (!restored && p && p.roster && p.order) {
+                const camp = "Default";
+                setCampaigns([{ folderName: camp }]);
+                setRostersByCamp({ [camp]: p.roster });
+                setOrdersByCamp({ [camp]: p.order });
+                setFileMapsByCamp({ [camp]: p.fileMap || {} });
+                setActiveCampaign(camp);
+                setRoster(p.roster); setOrder(p.order); setFileMap(p.fileMap || {});
+                const aid = p.activeId && p.roster[p.activeId] ? p.activeId : (p.order[0] || null);
+                if (aid) setActiveId(aid);
+                restored = true;
+              }
+            }
+            if (!restored) {
               const legacyV1 = localStorage.getItem(LEGACY_ROSTER_KEY);
               if (legacyV1) {
                 const p = JSON.parse(legacyV1);
                 if (p && p.roster) {
-                  setRoster(p.roster);
-                  setOrder(p.order || Object.keys(p.roster));
-                  setActiveId(p.activeId || (p.order && p.order[0]) || null);
+                  const camp = "Default";
+                  const ord = p.order || Object.keys(p.roster);
+                  setCampaigns([{ folderName: camp }]);
+                  setRostersByCamp({ [camp]: p.roster });
+                  setOrdersByCamp({ [camp]: ord });
+                  setFileMapsByCamp({ [camp]: {} });
+                  setActiveCampaign(camp);
+                  setRoster(p.roster); setOrder(ord); setFileMap({});
+                  setActiveId(p.activeId || ord[0] || null);
                   setInfoMsg("Schede migrate dalla dashboard v1.");
-                }
-              } else {
-                const legacy = localStorage.getItem(LEGACY_SINGLE_KEY);
-                if (legacy) {
-                  const ch = JSON.parse(legacy);
-                  const id = genId();
-                  setRoster({ [id]: ch });
-                  setOrder([id]);
-                  setActiveId(id);
-                  setInfoMsg("Scheda singola v5.x migrata.");
+                  restored = true;
                 }
               }
-              if (!handle) setSaveStatus(fsaSupported ? "idle" : "lsonly");
             }
+            if (!restored) {
+              const legacy = localStorage.getItem(LEGACY_SINGLE_KEY);
+              if (legacy) {
+                const ch = JSON.parse(legacy);
+                const id = genId();
+                const camp = "Default";
+                setCampaigns([{ folderName: camp }]);
+                setRostersByCamp({ [camp]: { [id]: ch } });
+                setOrdersByCamp({ [camp]: [id] });
+                setFileMapsByCamp({ [camp]: {} });
+                setActiveCampaign(camp);
+                setRoster({ [id]: ch }); setOrder([id]); setFileMap({});
+                setActiveId(id);
+                setInfoMsg("Scheda singola v5.x migrata.");
+              }
+            }
+            if (!handle) setSaveStatus(fsaSupported ? "idle" : "lsonly");
           } catch (e) {
             console.warn("LS restore fallito:", e);
           }
@@ -2032,8 +2208,25 @@ function Dashboard(){
     if (!bootDone) return;
     // Skip il primo run dopo boot (evita di riscrivere ciò che è appena stato letto)
     if (!postBoot.current) { postBoot.current = true; return; }
-    if (!dirHandle) {
+    if (!dirHandle || !activeCampaign) {
       setSaveStatus(fsaSupported ? "idle" : "lsonly");
+      return;
+    }
+    // Sincronizza lo stato della campagna attiva nelle mappe per-campagna
+    setRostersByCamp(function(prev){
+      const next = Object.assign({}, prev);
+      next[activeCampaign] = roster;
+      return next;
+    });
+    setOrdersByCamp(function(prev){
+      const next = Object.assign({}, prev);
+      next[activeCampaign] = order;
+      return next;
+    });
+
+    const campHandle = campaignHandlesRef.current[activeCampaign];
+    if (!campHandle) {
+      // Sottocartella non in cache: la save effect verrà rifatta quando l'handle è pronto
       return;
     }
 
@@ -2064,29 +2257,34 @@ function Dashboard(){
           } else {
             target = uniqueFilename(ch.name || "senza_nome", taken);
             if (fmCur[id] && fmCur[id] !== target) {
-              await deleteCharFile(dirHandle, fmCur[id]);
+              await deleteCharFile(campHandle, fmCur[id]);
             }
           }
           taken.add(target);
           fmNew[id] = target;
           const payload = Object.assign({}, ch, { _dashboardId: id });
           // Backup giornaliero: solo se stiamo sovrascrivendo un file già esistente su disco
-          // (cioè il PG aveva già un file mappato). Le schede nuove non hanno nulla da salvare.
           if (fmCur[id]) {
-            try { await backupIfNeeded(dirHandle, target); }
+            try { await backupIfNeeded(campHandle, target); }
             catch (e) { console.warn("backupIfNeeded errore:", e); }
           }
-          await writeCharFile(dirHandle, target, payload);
+          await writeCharFile(campHandle, target, payload);
         }
 
         // PG rimossi → cancella i loro file
         for (const oldId in fmCur) {
           if (!fmNew[oldId]) {
-            await deleteCharFile(dirHandle, fmCur[oldId]);
+            await deleteCharFile(campHandle, fmCur[oldId]);
           }
         }
 
         setFileMap(fmNew);
+        // Sincronizza anche fileMapsByCamp
+        setFileMapsByCamp(function(prev){
+          const next = Object.assign({}, prev);
+          next[activeCampaign] = fmNew;
+          return next;
+        });
         setSaveStatus("saved");
       } catch (e) {
         console.error("Save fallito:", e);
@@ -2101,17 +2299,33 @@ function Dashboard(){
     saveTimer.current = setTimeout(tryRun, 600);
 
     return function(){};
-  }, [roster, order, dirHandle, bootDone]);
+  }, [roster, order, dirHandle, activeCampaign, bootDone]);
 
   /* ─── Backup localStorage (sempre, anche se c'è la cartella) ─── */
   useEffect(function(){
     if (!bootDone) return;
     try {
+      // Aggiorna gli oggetti per-campagna con lo stato attivo
+      const rByC = Object.assign({}, rostersByCamp);
+      const oByC = Object.assign({}, ordersByCamp);
+      const fmByC = Object.assign({}, fileMapsByCamp);
+      if (activeCampaign) {
+        rByC[activeCampaign] = roster;
+        oByC[activeCampaign] = order;
+        fmByC[activeCampaign] = fileMap;
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        roster: roster, order: order, fileMap: fileMap, activeId: activeId
+        version: 4,
+        campaigns: campaigns,
+        activeCampaign: activeCampaign,
+        rostersByCamp: rByC, ordersByCamp: oByC, fileMapsByCamp: fmByC,
+        activeId: activeId
       }));
+      // Memorizza separatamente la campagna attiva per il prossimo boot
+      if (activeCampaign) localStorage.setItem("activeCampaign_v4", activeCampaign);
     } catch (e) { /* quota o privacy mode */ }
-  }, [roster, order, fileMap, activeId, bootDone]);
+  }, [roster, order, fileMap, activeId, activeCampaign, campaigns,
+      rostersByCamp, ordersByCamp, fileMapsByCamp, bootDone]);
 
   /* ─── ch + setCh che editano il PG attivo ─── */
   const ch = activeId ? roster[activeId] : null;
@@ -2190,6 +2404,204 @@ function Dashboard(){
   const canRedo = activeId && historyRef.current[activeId] && historyRef.current[activeId].future.length > 0;
 
   /* ─── Folder picker ─── */
+  /* ─── Gestione campagne ─── */
+
+  // Cambia campagna: salva lo stato della campagna in uscita e carica quella in entrata
+  function switchCampaign(folderName){
+    if (folderName === activeCampaign) return;
+    if (!folderName) return;
+    if (!rostersByCamp[folderName]) {
+      setErrorMsg("Campagna sconosciuta: " + folderName);
+      return;
+    }
+    // Salva lo stato corrente prima di switchare
+    setRostersByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: roster }); });
+    setOrdersByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: order }); });
+    setFileMapsByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: fileMap }); });
+    // Carica la nuova
+    setActiveCampaign(folderName);
+    const newR = rostersByCamp[folderName] || {};
+    const newO = ordersByCamp[folderName] || [];
+    const newFm = fileMapsByCamp[folderName] || {};
+    setRoster(newR); setOrder(newO); setFileMap(newFm);
+    setActiveId(newO[0] || null);
+  }
+
+  async function createCampaign(){
+    const name = window.prompt("Nome della nuova campagna:", "");
+    if (!name) return;
+    const folderName = sanitizeFolderName(name);
+    if (campaigns.find(function(c){ return c.folderName === folderName; })) {
+      setErrorMsg("Esiste già una campagna con questo nome.");
+      return;
+    }
+    // Su disco: crea la sottocartella se abbiamo la cartella root
+    if (dirHandle) {
+      try {
+        const sub = await dirHandle.getDirectoryHandle(folderName, { create: true });
+        campaignHandlesRef.current[folderName] = sub;
+      } catch (e) {
+        setErrorMsg("Errore creando la sottocartella: " + e.message);
+        return;
+      }
+    }
+    // Aggiorna lo stato
+    setCampaigns(function(prev){ return prev.concat([{ folderName: folderName }]); });
+    setRostersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: {} }); });
+    setOrdersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: [] }); });
+    setFileMapsByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: {} }); });
+    // Salva stato corrente, poi switcha
+    if (activeCampaign) {
+      setRostersByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: roster }); });
+      setOrdersByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: order }); });
+      setFileMapsByCamp(function(prev){ return Object.assign({}, prev, { [activeCampaign]: fileMap }); });
+    }
+    setActiveCampaign(folderName);
+    setRoster({}); setOrder([]); setFileMap({}); setActiveId(null);
+    setInfoMsg("Campagna \"" + folderName + "\" creata.");
+    setTimeout(function(){ setInfoMsg(null); }, 3000);
+  }
+
+  async function renameActiveCampaign(){
+    if (!activeCampaign) return;
+    const newName = window.prompt("Nuovo nome per la campagna:", activeCampaign);
+    if (!newName) return;
+    const newFolder = sanitizeFolderName(newName);
+    if (newFolder === activeCampaign) return;
+    if (campaigns.find(function(c){ return c.folderName === newFolder; })) {
+      setErrorMsg("Esiste già una campagna con questo nome.");
+      return;
+    }
+    const oldFolder = activeCampaign;
+    // Sul disco: crea la nuova sottocartella, sposta i file, cancella la vecchia
+    if (dirHandle) {
+      try {
+        const oldHandle = campaignHandlesRef.current[oldFolder];
+        const newHandle = await dirHandle.getDirectoryHandle(newFolder, { create: true });
+        if (oldHandle) {
+          // Sposta tutti i file (incluso i backup)
+          const filesToMove = [];
+          for await (const entry of oldHandle.values()) {
+            if (entry.kind === "file") filesToMove.push(entry.name);
+          }
+          for (const fname of filesToMove) {
+            const srcFh = await oldHandle.getFileHandle(fname, { create: false });
+            const txt = await (await srcFh.getFile()).text();
+            const dstFh = await newHandle.getFileHandle(fname, { create: true });
+            const w = await dstFh.createWritable();
+            await w.write(txt); await w.close();
+            await oldHandle.removeEntry(fname);
+          }
+          // Rimuovi la vecchia sottocartella
+          try { await dirHandle.removeEntry(oldFolder); } catch(e){}
+        }
+        campaignHandlesRef.current[newFolder] = newHandle;
+        delete campaignHandlesRef.current[oldFolder];
+      } catch (e) {
+        setErrorMsg("Errore rinominando: " + e.message);
+        return;
+      }
+    }
+    // Aggiorna lo stato
+    setCampaigns(function(prev){
+      return prev.map(function(c){ return c.folderName === oldFolder ? { folderName: newFolder } : c; });
+    });
+    setRostersByCamp(function(prev){
+      const next = Object.assign({}, prev);
+      next[newFolder] = next[oldFolder] || roster; delete next[oldFolder]; return next;
+    });
+    setOrdersByCamp(function(prev){
+      const next = Object.assign({}, prev);
+      next[newFolder] = next[oldFolder] || order; delete next[oldFolder]; return next;
+    });
+    setFileMapsByCamp(function(prev){
+      const next = Object.assign({}, prev);
+      next[newFolder] = next[oldFolder] || fileMap; delete next[oldFolder]; return next;
+    });
+    setActiveCampaign(newFolder);
+    setInfoMsg("Campagna rinominata in \"" + newFolder + "\".");
+    setTimeout(function(){ setInfoMsg(null); }, 3000);
+  }
+
+  async function deleteActiveCampaign(){
+    if (!activeCampaign) return;
+    if (campaigns.length <= 1) {
+      setErrorMsg("Non puoi eliminare l'unica campagna esistente.");
+      return;
+    }
+    const pgCount = (ordersByCamp[activeCampaign] || []).length;
+    const msg = "Eliminare la campagna \"" + activeCampaign + "\"?\n\n" +
+      (pgCount > 0 ? "Contiene " + pgCount + " PG. " : "") +
+      (dirHandle ? "La sottocartella e i file dentro verranno cancellati." : "I dati nel browser verranno persi.");
+    if (!window.confirm(msg)) return;
+    // Cancella su disco
+    if (dirHandle) {
+      try {
+        await dirHandle.removeEntry(activeCampaign, { recursive: true });
+      } catch (e) {
+        setErrorMsg("Errore cancellando la cartella: " + e.message);
+        return;
+      }
+      delete campaignHandlesRef.current[activeCampaign];
+    }
+    const removed = activeCampaign;
+    const remaining = campaigns.filter(function(c){ return c.folderName !== removed; });
+    setCampaigns(remaining);
+    setRostersByCamp(function(prev){ const n = Object.assign({}, prev); delete n[removed]; return n; });
+    setOrdersByCamp(function(prev){ const n = Object.assign({}, prev); delete n[removed]; return n; });
+    setFileMapsByCamp(function(prev){ const n = Object.assign({}, prev); delete n[removed]; return n; });
+    // Switch alla prima rimasta
+    if (remaining.length > 0) {
+      const next = remaining[0].folderName;
+      setActiveCampaign(next);
+      const nr = rostersByCamp[next] || {};
+      const no = ordersByCamp[next] || [];
+      const nfm = fileMapsByCamp[next] || {};
+      setRoster(nr); setOrder(no); setFileMap(nfm);
+      setActiveId(no[0] || null);
+    } else {
+      setActiveCampaign(null);
+      setRoster({}); setOrder([]); setFileMap({}); setActiveId(null);
+    }
+  }
+
+  // Esegue la migrazione dei .json di root in una sottocartella scelta
+  async function doMigration(targetCampaignName){
+    if (!migrationPrompt || !dirHandle) return;
+    const folderName = sanitizeFolderName(targetCampaignName || "Default");
+    try {
+      const result = await migrateRootToCampaign(dirHandle, folderName);
+      // Ricarica la sottocartella di destinazione
+      const sub = await dirHandle.getDirectoryHandle(folderName, { create: false });
+      campaignHandlesRef.current[folderName] = sub;
+      const files = await listCharFiles(sub);
+      const r = {}, o = [], fm = {};
+      files.forEach(function(f){
+        const id = (f.data && f.data._dashboardId) || genId();
+        const cleaned = Object.assign({}, f.data);
+        delete cleaned._dashboardId;
+        r[id] = cleaned; o.push(id); fm[id] = f.filename;
+      });
+      // Se la campagna esiste già, sovrascrivila con i dati dal disco (più affidabile)
+      const exists = campaigns.find(function(c){ return c.folderName === folderName; });
+      if (!exists) {
+        setCampaigns(function(prev){ return prev.concat([{ folderName: folderName }]); });
+      }
+      setRostersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: r }); });
+      setOrdersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: o }); });
+      setFileMapsByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: fm }); });
+      // Switcha sulla campagna migrata
+      setActiveCampaign(folderName);
+      setRoster(r); setOrder(o); setFileMap(fm);
+      if (o.length > 0) setActiveId(o[0]);
+      setMigrationPrompt(null);
+      setInfoMsg(result.moved + " schede migrate in \"" + folderName + "\".");
+      setTimeout(function(){ setInfoMsg(null); }, 4000);
+    } catch (e) {
+      setErrorMsg("Migrazione fallita: " + e.message);
+    }
+  }
+
   async function pickFolder(){
     if (!fsaSupported) {
       setErrorMsg("Questo browser non supporta la scelta cartella. Usa Chrome o Edge desktop.");
@@ -2205,57 +2617,80 @@ function Dashboard(){
     const ok = await ensurePermission(handle, "readwrite");
     if (!ok) { setErrorMsg("Permesso negato."); return; }
 
-    let files;
-    try { files = await listCharFiles(handle); }
-    catch (e) { setErrorMsg("Errore lettura cartella: " + e.message); return; }
-
-    // Decidi cosa fare — PRIMA di toccare IDB o stato
-    let action; // "load" | "writeMine" | "abort"
-    if (files.length > 0 && order.length > 0) {
-      if (window.confirm("La cartella contiene " + files.length + " scheda/e.\n\nOK = carica QUESTE al posto del roster attuale (il roster nel browser viene sostituito).\nAnnulla = non collegare la cartella, tieni il roster attuale.")) {
-        action = "load";
-      } else {
-        action = "abort";
-      }
-    } else if (files.length > 0) {
-      action = "load"; // roster vuoto, carico le esistenti
-    } else if (order.length > 0) {
-      action = "writeMine"; // cartella vuota, ci scriviamo le mie
-    } else {
-      action = "writeMine"; // entrambe vuote — collego e basta
+    // Enumera contenuto della root: sottocartelle = campagne, .json di root = candidati migrazione
+    let folderNames = [], rootFiles = [];
+    try {
+      folderNames = await listCampaignFolders(handle);
+      rootFiles = await listRootCharFiles(handle);
+    } catch (e) {
+      setErrorMsg("Errore lettura cartella: " + e.message);
+      return;
     }
 
-    if (action === "abort") return;
+    // Se ci sono già campagne nel browser ma la nuova cartella ha contenuto, chiedi conferma
+    const haveLocalData = (campaigns && campaigns.length > 0);
+    const folderHasData = (folderNames.length > 0 || rootFiles.length > 0);
+    if (haveLocalData && folderHasData) {
+      const txt = "La cartella contiene " + folderNames.length + " campagn" +
+        (folderNames.length===1?"a":"e") +
+        (rootFiles.length > 0 ? " e " + rootFiles.length + " scheda/e di root" : "") +
+        ".\n\nOK = carica QUESTI dati al posto di quelli nel browser.\nAnnulla = non collegare la cartella.";
+      if (!window.confirm(txt)) return;
+    }
 
-    // Persisti handle dopo la conferma
+    // Persisti handle
     try { await idbSet("dirHandle", handle); }
     catch (e) { console.warn("IDB set fallito:", e); }
 
-    if (action === "load") {
-      const r = {}, o = [], fm = {};
-      files.forEach(function(f){
-        const id = (f.data && f.data._dashboardId) || genId();
-        const cleaned = Object.assign({}, f.data);
-        delete cleaned._dashboardId;
-        r[id] = cleaned;
-        o.push(id);
-        fm[id] = f.filename;
-      });
-      setRoster(r); setOrder(o); setFileMap(fm);
-      if (o.length > 0) setActiveId(o[0]);
-      setDirHandle(handle);
-      setInfoMsg("Caricate " + files.length + " schede dalla cartella.");
-      setTimeout(function(){ setInfoMsg(null); }, 4000);
-    } else {
-      // writeMine: la save-effect scriverà il roster attuale (o niente se vuoto)
-      setFileMap({});
-      setDirHandle(handle);
-      setInfoMsg(order.length > 0
-        ? "Cartella impostata. Salvataggio in corso…"
-        : "Cartella impostata. Le schede verranno salvate qui."
-      );
-      setTimeout(function(){ setInfoMsg(null); }, 4000);
+    // Carica le campagne dalla cartella
+    const rByC = {}, oByC = {}, fmByC = {};
+    const camps = [];
+    for (const folderName of folderNames) {
+      try {
+        const sub = await handle.getDirectoryHandle(folderName, { create: false });
+        campaignHandlesRef.current[folderName] = sub;
+        const files = await listCharFiles(sub);
+        const r = {}, o = [], fm = {};
+        files.forEach(function(f){
+          const id = (f.data && f.data._dashboardId) || genId();
+          const cleaned = Object.assign({}, f.data);
+          delete cleaned._dashboardId;
+          r[id] = cleaned; o.push(id); fm[id] = f.filename;
+        });
+        rByC[folderName] = r; oByC[folderName] = o; fmByC[folderName] = fm;
+        camps.push({ folderName: folderName });
+      } catch (e) { console.warn("Sottocartella non leggibile:", folderName, e); }
     }
+
+    setDirHandle(handle);
+    setCampaigns(camps);
+    setRostersByCamp(rByC);
+    setOrdersByCamp(oByC);
+    setFileMapsByCamp(fmByC);
+
+    if (camps.length > 0) {
+      const chosen = camps[0].folderName;
+      setActiveCampaign(chosen);
+      setRoster(rByC[chosen] || {});
+      setOrder(oByC[chosen] || []);
+      setFileMap(fmByC[chosen] || {});
+      setActiveId((oByC[chosen] || [])[0] || null);
+    } else {
+      setActiveCampaign(null);
+      setRoster({}); setOrder([]); setFileMap({}); setActiveId(null);
+    }
+
+    // Prompt migrazione se ci sono .json di root
+    if (rootFiles.length > 0) {
+      setMigrationPrompt({
+        files: rootFiles.map(function(f){ return f.filename; }),
+        rootFiles: rootFiles
+      });
+    }
+
+    setInfoMsg(camps.length + " campagn" + (camps.length===1?"a":"e") + " caricate" +
+      (rootFiles.length > 0 ? " (" + rootFiles.length + " schede da migrare)" : "") + ".");
+    setTimeout(function(){ setInfoMsg(null); }, 4000);
   }
 
   async function reauthorize(){
@@ -2264,16 +2699,34 @@ function Dashboard(){
     if (!ok) { setErrorMsg("Permesso ancora negato."); return; }
     setErrorMsg(null);
     try {
-      const files = await listCharFiles(dirHandle);
-      const r = {}, o = [], fm = {};
-      files.forEach(function(f){
-        const id = (f.data && f.data._dashboardId) || genId();
-        const cleaned = Object.assign({}, f.data);
-        delete cleaned._dashboardId;
-        r[id] = cleaned; o.push(id); fm[id] = f.filename;
-      });
-      setRoster(r); setOrder(o); setFileMap(fm);
-      if (o.length > 0 && !r[activeId]) setActiveId(o[0]);
+      const folderNames = await listCampaignFolders(dirHandle);
+      const rByC = {}, oByC = {}, fmByC = {};
+      const camps = [];
+      for (const folderName of folderNames) {
+        const sub = await dirHandle.getDirectoryHandle(folderName, { create: false });
+        campaignHandlesRef.current[folderName] = sub;
+        const files = await listCharFiles(sub);
+        const r = {}, o = [], fm = {};
+        files.forEach(function(f){
+          const id = (f.data && f.data._dashboardId) || genId();
+          const cleaned = Object.assign({}, f.data);
+          delete cleaned._dashboardId;
+          r[id] = cleaned; o.push(id); fm[id] = f.filename;
+        });
+        rByC[folderName] = r; oByC[folderName] = o; fmByC[folderName] = fm;
+        camps.push({ folderName: folderName });
+      }
+      setCampaigns(camps);
+      setRostersByCamp(rByC);
+      setOrdersByCamp(oByC);
+      setFileMapsByCamp(fmByC);
+      const chosen = activeCampaign && rByC[activeCampaign] ? activeCampaign : (camps[0] && camps[0].folderName);
+      if (chosen) {
+        setActiveCampaign(chosen);
+        setRoster(rByC[chosen]); setOrder(oByC[chosen]); setFileMap(fmByC[chosen]);
+        const ord = oByC[chosen];
+        if (ord.length > 0 && !rByC[chosen][activeId]) setActiveId(ord[0]);
+      }
       setSaveStatus("saved");
       setInfoMsg("Cartella ricollegata.");
       setTimeout(function(){ setInfoMsg(null); }, 3000);
@@ -2285,7 +2738,7 @@ function Dashboard(){
   async function disconnectFolder(){
     if (!window.confirm("Smettere di salvare nella cartella?\n\nLe schede restano nel browser e i file su disco non vengono toccati. Potrai re-impostare la cartella in qualsiasi momento.")) return;
     setDirHandle(null);
-    setFileMap({});
+    campaignHandlesRef.current = {};
     try { await idbDel("dirHandle"); } catch(e){}
     setSaveStatus(fsaSupported ? "idle" : "lsonly");
     setShowSettings(false);
@@ -2294,9 +2747,10 @@ function Dashboard(){
   /* ─── Import / Add / Remove ─── */
   function triggerImport(){ fileInputRef.current && fileInputRef.current.click(); }
 
-  function onFiles(e){
+  async function onFiles(e){
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    await ensureActiveCampaign();
     let aggiunti = 0, falliti = 0, lastId = null, pending = files.length;
     const newRoster = Object.assign({}, roster);
     const newOrder = order.slice();
@@ -2331,7 +2785,33 @@ function Dashboard(){
     e.target.value = "";
   }
 
-  function addBlank(){
+  // Garantisce che esista almeno una campagna attiva. Crea "Default" se non c'è.
+  async function ensureActiveCampaign(){
+    if (activeCampaign && rostersByCamp[activeCampaign] !== undefined) return activeCampaign;
+    const folderName = "Default";
+    if (dirHandle) {
+      try {
+        const sub = await dirHandle.getDirectoryHandle(folderName, { create: true });
+        campaignHandlesRef.current[folderName] = sub;
+      } catch (e) {
+        setErrorMsg("Errore creando sottocartella Default: " + e.message);
+        return null;
+      }
+    }
+    setCampaigns(function(prev){
+      if (prev.find(function(c){ return c.folderName === folderName; })) return prev;
+      return prev.concat([{ folderName: folderName }]);
+    });
+    setRostersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: {} }); });
+    setOrdersByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: [] }); });
+    setFileMapsByCamp(function(prev){ return Object.assign({}, prev, { [folderName]: {} }); });
+    setActiveCampaign(folderName);
+    setRoster({}); setOrder([]); setFileMap({});
+    return folderName;
+  }
+
+  async function addBlank(){
+    await ensureActiveCampaign();
     const id = genId();
     const blank = Object.assign({}, INIT, { name: "Nuovo PG" });
     setRoster(function(r){ return Object.assign({}, r, { [id]: blank }); });
@@ -2369,18 +2849,44 @@ function Dashboard(){
       <style>{`
         .dash-bar{background:#1f1b16;border-bottom:2px solid #8a7235;padding:7px 10px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-family:'Crimson Text',serif;color:#d4c5a9;position:sticky;top:0;z-index:100}
         .dash-bar .lbl{font-family:'Cinzel',serif;color:#c9a84c;font-size:.74em;letter-spacing:2px;font-weight:600}
-        .dash-bar select.pg{background:#3a3220;border:2px solid #c9a84c;color:#e8c45a;padding:7px 14px;font-family:'Cinzel',serif;font-size:.85em;letter-spacing:1.5px;border-radius:4px;min-width:280px;cursor:pointer;font-weight:700}
-        .dash-bar select.pg:hover{background:#453a26;border-color:#e8c45a;box-shadow:0 0 6px rgba(232,196,90,.3)}
-        .dash-bar select.pg:disabled{opacity:.45;cursor:not-allowed}
+        .dash-bar select.camp{background:#2a2520;border:1px solid #8a7235;color:#d4c5a9;padding:5px 10px;font-family:'Cinzel',serif;font-size:.8em;letter-spacing:1px;border-radius:3px;min-width:180px;cursor:pointer}
+        .dash-bar select.camp:hover{background:#332e25;border-color:#c9a84c;color:#e8c45a}
+        .dash-bar select.camp:disabled{opacity:.45;cursor:not-allowed}
         .dash-bar .dbtn{padding:5px 10px;background:#2e2922;border:1px solid #8a7235;color:#c9a84c;cursor:pointer;font-family:'Cinzel',serif;font-size:.68em;letter-spacing:1px;border-radius:3px}
         .dash-bar .dbtn:hover{background:#332e25;color:#e8c45a}
         .dash-bar .dbtn.danger{border-color:#a83232;color:#d47070}
         .dash-bar .dbtn.danger:hover{background:#3a1f1f}
         .dash-bar .dbtn:disabled{opacity:.4;cursor:not-allowed}
         .dash-bar .spacer{flex:1;min-width:0}
-        .dash-bar .count{font-size:.72em;color:#8a7e6a;margin-left:2px}
         .dash-bar .status{font-size:.72em;font-weight:600;padding:4px 9px;border-radius:3px;background:#2e2922;border:1px solid;cursor:pointer;white-space:nowrap;font-family:'Crimson Text',serif}
         .dash-bar .status:hover{filter:brightness(1.2)}
+
+        /* Striscia tab PG, multilinea con wrap stile Pannello di Controllo */
+        .pg-tabs{background:#262119;border-bottom:1px solid #3d3529;padding:6px 8px 0 8px;display:flex;flex-wrap:wrap;gap:0;align-items:flex-end;font-family:'Crimson Text',serif}
+        .pg-tab{background:#1f1b16;border:1px solid #3d3529;border-bottom:none;color:#a89a7a;padding:5px 10px 4px 10px;margin:0 2px -1px 0;cursor:pointer;border-top-left-radius:5px;border-top-right-radius:5px;font-size:.85em;line-height:1.1;display:flex;flex-direction:column;align-items:flex-start;min-width:0;max-width:200px;transition:all .15s ease}
+        .pg-tab .pg-name{font-weight:600;color:#c9a84c;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+        .pg-tab .pg-sub{font-size:.7em;color:#7a6e58;letter-spacing:.5px;font-family:'Cinzel',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;text-transform:uppercase}
+        .pg-tab:hover{background:#2e2922;color:#d4c5a9}
+        .pg-tab:hover .pg-name{color:#e8c45a}
+        .pg-tab.act{background:#1a1714;border-color:#c9a84c;border-bottom:2px solid #1a1714;position:relative;z-index:2;padding-bottom:5px}
+        .pg-tab.act .pg-name{color:#e8c45a}
+        .pg-tab.act .pg-sub{color:#a09478}
+        .pg-tab.add{background:#222018;border-color:#3d3529;color:#7a8f7a;font-family:'Cinzel',serif;font-size:.7em;letter-spacing:1px;padding:7px 12px;align-self:center;justify-content:center}
+        .pg-tab.add:hover{background:#2b2820;color:#9cb89c;border-color:#5a7a5a}
+        .pg-tab.del{background:#221818;border-color:#3d2929;color:#a87a7a;font-family:'Cinzel',serif;font-size:.7em;letter-spacing:1px;padding:7px 12px;align-self:center;justify-content:center}
+        .pg-tab.del:hover{background:#2b1f1f;color:#d47070;border-color:#6a3030}
+
+        /* Prompt migrazione */
+        .dash-migrate{background:#252e1f;border:1px solid #5a7a3a;color:#d4dfba;padding:14px 18px;margin:8px;border-radius:5px;font-family:'Crimson Text',serif}
+        .dash-migrate strong{font-family:'Cinzel',serif;color:#c9e07a;font-size:.95em;letter-spacing:1px}
+        .dash-migrate p{margin:8px 0;line-height:1.4}
+        .dash-migrate ul{margin:6px 0 6px 24px;font-size:.88em;color:#a8b89a}
+        .dash-migrate .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+        .dash-migrate .dbtn{padding:7px 14px;background:#2e3922;border:1px solid #5a7a3a;color:#c9e07a;cursor:pointer;font-family:'Cinzel',serif;font-size:.72em;letter-spacing:1px;border-radius:3px}
+        .dash-migrate .dbtn:hover{background:#3a4a2a;color:#dff09a}
+        .dash-migrate .dbtn.primary{background:#3a5226;border-color:#7a9a4a;color:#dff09a;font-weight:700}
+        .dash-migrate .dbtn.primary:hover{background:#4a6630}
+
         .dash-empty{max-width:580px;margin:50px auto;padding:28px;background:#252119;border:1px solid #3d3529;border-radius:8px;text-align:center;color:#d4c5a9;font-family:'Crimson Text',serif}
         .dash-empty h2{font-family:'Cinzel',serif;color:#c9a84c;font-size:1.2em;letter-spacing:2px;margin-bottom:14px}
         .dash-empty p{margin-bottom:14px;line-height:1.5}
@@ -2412,29 +2918,34 @@ function Dashboard(){
         .dash-settings .dbtn.danger{border-color:#a83232;color:#d47070}
         .dash-settings .dbtn.danger:hover{background:#3a1f1f}
         @media (max-width:768px){
-          .dash-bar select.pg{min-width:0;flex:1;font-size:.78em;padding:6px 10px;letter-spacing:1px}
-          .dash-bar .lbl,.dash-bar .count{display:none}
+          .dash-bar select.camp{min-width:0;flex:1;font-size:.74em;padding:5px 8px}
+          .dash-bar .lbl{display:none}
           .dash-bar .status{font-size:.65em;padding:3px 6px}
+          .pg-tab{font-size:.78em;padding:4px 8px 3px 8px;max-width:140px}
+          .pg-tab .pg-name{max-width:120px}
+          .pg-tab .pg-sub{max-width:120px}
           .dash-settings{left:10px;right:10px;min-width:0;max-width:none}
         }
         @media print {
-          .dash-bar,.dash-msg,.dash-settings{display:none !important}
+          .dash-bar,.pg-tabs,.dash-msg,.dash-settings,.dash-migrate{display:none !important}
         }
       `}</style>
 
       <div className="dash-bar">
-        <span className="lbl">ATTIVO:</span>
-        <select className="pg"
-          value={activeId || ""}
-          disabled={empty}
-          onChange={function(e){ setActiveId(e.target.value || null); }}
-          title="Cambia personaggio">
-          {empty ? <option value="">— nessuna scheda —</option> : null}
-          {order.map(function(id){
-            return <option key={id} value={id}>{summarize(roster[id])}</option>;
+        <span className="lbl">CAMPAGNA:</span>
+        <select className="camp"
+          value={activeCampaign || ""}
+          disabled={campaigns.length === 0}
+          onChange={function(e){ switchCampaign(e.target.value); }}
+          title="Cambia campagna">
+          {campaigns.length === 0 ? <option value="">— nessuna —</option> : null}
+          {campaigns.map(function(c){
+            return <option key={c.folderName} value={c.folderName}>{c.folderName}</option>;
           })}
         </select>
-        <span className="count">{order.length} PG</span>
+        <button className="dbtn" onClick={createCampaign} title="Nuova campagna">＋</button>
+        <button className="dbtn" onClick={renameActiveCampaign} disabled={!activeCampaign} title="Rinomina campagna">✎</button>
+        <button className="dbtn danger" onClick={deleteActiveCampaign} disabled={!activeCampaign || campaigns.length<=1} title="Elimina campagna">🗑</button>
 
         <button className="dbtn" onClick={doUndo} disabled={!canUndo}
           title="Annulla (Ctrl+Z)">↶</button>
@@ -2452,14 +2963,61 @@ function Dashboard(){
           </span>
         ) : null}
 
-        <button className="dbtn" onClick={triggerImport} title="Importa schede JSON">＋ Importa</button>
-        <button className="dbtn" onClick={addBlank} title="Crea scheda vuota">＋ Vuota</button>
         <button className="dbtn" onClick={function(){ setShowSettings(function(s){ return !s; }); }} title="Impostazioni">⚙</button>
-        <button className="dbtn danger" onClick={removeActive} disabled={!activeId} title="Rimuovi PG corrente">✕</button>
+      </div>
 
+      {/* Tab PG — wrap multilinea stile Pannello di Controllo */}
+      {activeCampaign ? (
+        <div className="pg-tabs">
+          {order.map(function(id){
+            const isActive = id === activeId;
+            return (
+              <div key={id}
+                   className={"pg-tab" + (isActive ? " act" : "")}
+                   onClick={function(){ setActiveId(id); }}
+                   title={summarize(roster[id])}>
+                <span className="pg-name">{(roster[id] && roster[id].name) || "(senza nome)"}</span>
+                <span className="pg-sub">{
+                  (function(){
+                    const cls = ((roster[id] && roster[id].classes) || []).filter(function(c){return c && c.name;});
+                    if (cls.length === 0) return "—";
+                    return cls.map(function(c){ return c.name.slice(0,4) + " " + (c.level||0); }).join("/");
+                  })()
+                }</span>
+              </div>
+            );
+          })}
+          <div className="pg-tab add" onClick={triggerImport} title="Importa schede JSON">＋ Importa</div>
+          <div className="pg-tab add" onClick={addBlank} title="Crea scheda vuota">＋ Vuota</div>
+          {activeId ? (
+            <div className="pg-tab del" onClick={removeActive} title="Rimuovi PG corrente">✕ {(roster[activeId] && roster[activeId].name) || "PG"}</div>
+          ) : null}
+          <input ref={fileInputRef} type="file" accept="application/json,.json" multiple
+            style={{display:"none"}} onChange={onFiles}/>
+        </div>
+      ) : (
         <input ref={fileInputRef} type="file" accept="application/json,.json" multiple
           style={{display:"none"}} onChange={onFiles}/>
-      </div>
+      )}
+
+      {migrationPrompt ? (
+        <div className="dash-migrate">
+          <strong>📦 Schede senza campagna trovate.</strong>
+          <p>Nella cartella ho trovato <b>{migrationPrompt.files.length}</b> file JSON che non appartengono a una campagna:</p>
+          <ul>{migrationPrompt.files.slice(0,5).map(function(f){ return <li key={f}>{f}</li>; })}
+            {migrationPrompt.files.length > 5 ? <li>... e altri {migrationPrompt.files.length - 5}</li> : null}
+          </ul>
+          <p>Posso spostarli in una sottocartella-campagna:</p>
+          <div className="row">
+            <button className="dbtn primary" onClick={function(){ doMigration("Default"); }}>📁 Sposta in "Default"</button>
+            <button className="dbtn" onClick={function(){
+              const n = window.prompt("Nome della campagna:", "Default");
+              if (n) doMigration(n);
+            }}>📁 Sposta in… (scegli nome)</button>
+            <button className="dbtn" onClick={function(){ setMigrationPrompt(null); }}>Più tardi</button>
+          </div>
+        </div>
+      ) : null}
 
       {errorMsg ? <div className="dash-msg err">{errorMsg} <span className="x" onClick={function(){ setErrorMsg(null); }}>✕</span></div> : null}
       {infoMsg  ? <div className="dash-msg ok">{infoMsg} <span className="x" onClick={function(){ setInfoMsg(null); }}>✕</span></div> : null}

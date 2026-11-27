@@ -52,6 +52,8 @@ const GX_CSS = `/* La Gemma di San Batacchio · strato di presentazione nuovo (s
 .gx-row .nm{flex:1;min-width:0;line-height:1.2}
 .gx-row .nm small{display:block;font-size:12.5px;color:var(--muted)}
 .gx-val{font-family:var(--font-num);font-size:19px;font-weight:600;min-width:36px;text-align:right}
+.gx-tira{flex:1;min-width:0;display:flex;align-items:center;gap:inherit;background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.gx-tira .nm{flex:1;min-width:0}
 .gx-neg{color:var(--bad)}.gx-pos{color:var(--good)}
 .gx-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:56px;height:40px;padding:0 12px;border-radius:calc(var(--radius) - 2px);border:1px solid var(--acc);color:var(--acc);font-weight:600;font-size:14px;white-space:nowrap}
 .gx-btn.q{border-color:var(--line);color:var(--ink)}
@@ -686,9 +688,12 @@ function Scheda({ C }) {
       <Card style={{ marginTop: 8 }}>{gruppi.length ? gruppi.map(g => { const aperta = !!q || !chiuse[g.name]; return <div key={g.name}>
         <button className="gx-row" aria-expanded={aperta} onClick={() => setChiuse(Object.assign({}, chiuse, { [g.name]: aperta }))}>
           <span className="nm" style={{ fontWeight: 700 }}>{g.name}</span><span className="gx-tag">{g.skills.length}</span><span className="gx-chev">{aperta ? "⌄" : "›"}</span></button>
-        {aperta ? g.skills.map(s => <Row key={s.i} style={{ paddingLeft: 24 }} name={s.name} sub={s.attr + " · rank " + s.rank + (s.bonus ? " · B/M " + fm(s.bonus) : "") + (s.tal ? " · mod. " + fm(s.tal) : "")}>
-          <Chip on={s.pinned} onClick={() => C.act.pin(s.i)}>{s.pinned ? "Fissata" : "Fissa"}</Chip>
-          <button className="gx-val" style={{ minWidth: 48 }} aria-label={"Prova di " + s.name} onClick={() => C.act.roll(s.name, s.tot)}><span className={tone(s.tot)}>{fm(s.tot)}</span></button></Row>) : null}
+        {/* 10.7.10 (REGIA, 27/11): nell'elenco si tira come nella ricerca, toccando la riga (nome, valore, d20); «Fissa» resta a parte */}
+        {aperta ? g.skills.map(s => <div key={s.i} className="gx-row" style={{ paddingLeft: 24 }}>
+          <button className="gx-tira" aria-label={"Prova di " + s.name} onClick={() => C.act.roll(s.name, s.tot)}>
+            <span className="nm">{s.name}<small>{s.attr + " · rank " + s.rank + (s.bonus ? " · B/M " + fm(s.bonus) : "") + (s.tal ? " · mod. " + fm(s.tal) : "")}</small></span>
+            <span className={"gx-val " + tone(s.tot)}>{fm(s.tot)}</span><span className="gx-btn">d20</span></button>
+          <Chip on={s.pinned} onClick={() => C.act.pin(s.i)}>{s.pinned ? "Fissata" : "Fissa"}</Chip></div>) : null}
       </div>; }) : <Row name={<small>Nessuna competenza trovata.</small>} />}</Card></div>}
   </div>;
 }

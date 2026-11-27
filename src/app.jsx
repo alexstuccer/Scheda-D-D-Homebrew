@@ -1,6 +1,6 @@
 
 const { useState, useMemo, useRef, useEffect } = React;
-const APP_VERSION = "10.7.8"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
+const APP_VERSION = "10.7.11"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
 try { document.title = "La Gemma di San Batacchio · v" + APP_VERSION; } catch (e) {}
 // Altezza della barra campagna (sticky) in --dash-h: serve alle intestazioni sticky delle competenze.
 (function() {
@@ -4640,24 +4640,55 @@ function Dashboard(){
     const ok = await ensurePermission(handle, "readwrite");
     if (!ok) { setErrorMsg("Permesso negato."); return; }
 
-    // Enumera contenuto della root: sottocartelle = campagne, .json di root = candidati migrazione
+    // 10.7.9 (27/11): copia di sicurezza di quello che c'è nel browser prima di collegare una cartella
+    try { const prima = localStorage.getItem(STORAGE_KEY); if (prima) localStorage.setItem(STORAGE_KEY + "_prima_della_cartella", prima); } catch (e) {}
+
+    // Enumera contenuto della root: campagne = sottocartelle che contengono schede, .json di root = candidati migrazione.
+    // 10.7.9: le sottocartelle senza schede non diventano campagne (prima, scegliendo per errore Documenti, ogni sua sottocartella diventava una campagna)
     let folderNames = [], rootFiles = [];
+    const filesByFolder = {};
     try {
-      folderNames = await listCampaignFolders(handle);
+      const tutte = await listCampaignFolders(handle);
+      for (const folderName of tutte) {
+        try {
+          const sub = await handle.getDirectoryHandle(folderName, { create: false });
+          const files = await listCharFiles(sub);
+          if (files.length > 0) { folderNames.push(folderName); filesByFolder[folderName] = { sub: sub, files: files }; }
+        } catch (e) { console.warn("Sottocartella non leggibile:", folderName, e); }
+      }
       rootFiles = await listRootCharFiles(handle);
     } catch (e) {
       setErrorMsg("Errore lettura cartella: " + e.message);
       return;
     }
 
-    // Se ci sono già campagne nel browser ma la nuova cartella ha contenuto, chiedi conferma
-    const haveLocalData = (campaigns && campaigns.length > 0);
+    const haveLocalData = Object.keys(roster || {}).length > 0 || Object.keys(rostersByCamp || {}).some(function(k){ return Object.keys(rostersByCamp[k] || {}).length > 0; });
     const folderHasData = (folderNames.length > 0 || rootFiles.length > 0);
-    if (haveLocalData && folderHasData) {
-      const txt = "La cartella contiene " + folderNames.length + " campagn" +
-        (folderNames.length===1?"a":"e") +
-        (rootFiles.length > 0 ? " e " + rootFiles.length + " scheda/e di root" : "") +
-        ".\n\nOK = carica QUESTI dati al posto di quelli nel browser.\nAnnulla = non collegare la cartella.";
+
+    // 10.7.9: cartella senza schede → i personaggi del browser restano e vengono salvati lì dentro
+    if (!folderHasData) {
+      try { await idbSet("dirHandle", handle); } catch (e) { console.warn("IDB set fallito:", e); }
+      const camps0 = (campaigns && campaigns.length) ? campaigns : [{ folderName: activeCampaign || "Default" }];
+      for (const c of camps0) {
+        try { campaignHandlesRef.current[c.folderName] = await handle.getDirectoryHandle(c.folderName, { create: true }); }
+        catch (e) { setErrorMsg("Errore creando la sottocartella " + c.folderName + ": " + e.message); return; }
+      }
+      const fm0 = {}; camps0.forEach(function(c){ fm0[c.folderName] = {}; });
+      fileMapRef.current = {};
+      setFileMapsByCamp(fm0); setFileMap({});
+      if (!campaigns || !campaigns.length) { setCampaigns(camps0); setActiveCampaign(camps0[0].folderName); }
+      setDirHandle(handle);
+      setInfoMsg(haveLocalData ? "Cartella collegata: i personaggi del browser vengono salvati lì." : "Cartella collegata.");
+      setTimeout(function(){ setInfoMsg(null); }, 4000);
+      return;
+    }
+
+    if (haveLocalData) {
+      const txt = "La cartella «" + handle.name + "» contiene già delle schede" +
+        " (" + folderNames.length + " campagn" + (folderNames.length===1?"a":"e") +
+        (rootFiles.length > 0 ? ", " + rootFiles.length + " file sciolti" : "") + ")." +
+        "\n\nOK = la scheda usa i personaggi di quella cartella al posto di quelli del browser (questi restano in una copia di sicurezza)." +
+        "\nAnnulla = non collegare la cartella.";
       if (!window.confirm(txt)) return;
     }
 
@@ -4669,20 +4700,17 @@ function Dashboard(){
     const rByC = {}, oByC = {}, fmByC = {};
     const camps = [];
     for (const folderName of folderNames) {
-      try {
-        const sub = await handle.getDirectoryHandle(folderName, { create: false });
-        campaignHandlesRef.current[folderName] = sub;
-        const files = await listCharFiles(sub);
-        const r = {}, o = [], fm = {};
-        files.forEach(function(f){
-          const id = (f.data && f.data._dashboardId) || genId();
-          const cleaned = Object.assign({}, f.data);
-          delete cleaned._dashboardId;
-          r[id] = cleaned; o.push(id); fm[id] = f.filename;
-        });
-        rByC[folderName] = r; oByC[folderName] = o; fmByC[folderName] = fm;
-        camps.push({ folderName: folderName });
-      } catch (e) { console.warn("Sottocartella non leggibile:", folderName, e); }
+      const sub = filesByFolder[folderName].sub, files = filesByFolder[folderName].files;
+      campaignHandlesRef.current[folderName] = sub;
+      const r = {}, o = [], fm = {};
+      files.forEach(function(f){
+        const id = (f.data && f.data._dashboardId) || genId();
+        const cleaned = Object.assign({}, f.data);
+        delete cleaned._dashboardId;
+        r[id] = cleaned; o.push(id); fm[id] = f.filename;
+      });
+      rByC[folderName] = r; oByC[folderName] = o; fmByC[folderName] = fm;
+      camps.push({ folderName: folderName });
     }
 
     setDirHandle(handle);
@@ -5019,20 +5047,17 @@ function Dashboard(){
 
       <div className="dash-bar">
         <span className="dash-ver" title="Versione della scheda">v{APP_VERSION}</span>
-        <span className="lbl">CAMPAGNA:</span>
-        <select className="camp"
+        {/* 10.7.9 (27/11, Alessandro): niente più gestione delle campagne (nuova, rinomina, elimina).
+            Chi ha già più campagne vede ancora il menu per passare dall'una all'altra, così non perde i personaggi. */}
+        {campaigns.length > 1 ? <span className="lbl">CAMPAGNA:</span> : null}
+        {campaigns.length > 1 ? <select className="camp"
           value={activeCampaign || ""}
-          disabled={campaigns.length === 0}
           onChange={function(e){ switchCampaign(e.target.value); }}
-          title="Cambia campagna">
-          {campaigns.length === 0 ? <option value="">— nessuna —</option> : null}
+          title="Campagna">
           {campaigns.map(function(c){
             return <option key={c.folderName} value={c.folderName}>{c.folderName}</option>;
           })}
-        </select>
-        <button className="dbtn" onClick={createCampaign} title="Nuova campagna">＋</button>
-        <button className="dbtn" onClick={renameActiveCampaign} disabled={!activeCampaign} title="Rinomina campagna">✎</button>
-        <button className="dbtn danger" onClick={deleteActiveCampaign} disabled={!activeCampaign || campaigns.length<=1} title="Elimina campagna">🗑</button>
+        </select> : null}
 
         <button className="dbtn" onClick={doUndo} disabled={!canUndo}
           title="Annulla (Ctrl+Z)">↶</button>
@@ -5077,6 +5102,18 @@ function Dashboard(){
             );
           })}
           <div className="pg-tab add" onClick={triggerImport} title="Importa schede JSON">＋ Importa</div>
+          {/* 10.7.11 (28/11): l'esportazione in vista accanto a Importa, prima stava solo nel menu ⋯ */}
+          {activeId && roster[activeId] ? (
+            <div className="pg-tab add" title="Scarica la scheda del PG corrente come file JSON" onClick={function(){
+              try {
+                const ch = roster[activeId];
+                const url = URL.createObjectURL(new Blob([JSON.stringify(ch, null, 2)], { type: "application/json" }));
+                const a = document.createElement("a"); a.href = url; a.download = (ch.name || "scheda") + ".json";
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+              } catch (e) { setErrorMsg("Esportazione non riuscita: " + e.message); }
+            }}>⬇ Esporta</div>
+          ) : null}
           <div className="pg-tab add" onClick={addBlank} title="Crea scheda vuota">＋ Vuota</div>
           {activeId ? (
             <div className="pg-tab del" onClick={removeActive} title="Rimuovi PG corrente">✕ {(roster[activeId] && roster[activeId].name) || "PG"}</div>
@@ -5136,7 +5173,6 @@ function Dashboard(){
                 <p className="err-line">⚠ L'ultimo salvataggio è fallito. Prova a riautorizzare.</p>
               ) : null}
               <div className="row">
-                <button className="dbtn" onClick={pickFolder}>↻ Cambia cartella</button>
                 {saveStatus === "error" ? <button className="dbtn primary" onClick={reauthorize}>🔓 Riautorizza</button> : null}
                 <button className="dbtn danger" onClick={disconnectFolder}>✕ Scollega cartella</button>
               </div>

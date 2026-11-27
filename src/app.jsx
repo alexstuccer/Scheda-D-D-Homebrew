@@ -1,6 +1,6 @@
 
 const { useState, useMemo, useRef, useEffect } = React;
-const APP_VERSION = "10.7.10"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
+const APP_VERSION = "10.7.11"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
 try { document.title = "La Gemma di San Batacchio · v" + APP_VERSION; } catch (e) {}
 // Altezza della barra campagna (sticky) in --dash-h: serve alle intestazioni sticky delle competenze.
 (function() {
@@ -5102,6 +5102,18 @@ function Dashboard(){
             );
           })}
           <div className="pg-tab add" onClick={triggerImport} title="Importa schede JSON">＋ Importa</div>
+          {/* 10.7.11 (28/11): l'esportazione in vista accanto a Importa, prima stava solo nel menu ⋯ */}
+          {activeId && roster[activeId] ? (
+            <div className="pg-tab add" title="Scarica la scheda del PG corrente come file JSON" onClick={function(){
+              try {
+                const ch = roster[activeId];
+                const url = URL.createObjectURL(new Blob([JSON.stringify(ch, null, 2)], { type: "application/json" }));
+                const a = document.createElement("a"); a.href = url; a.download = (ch.name || "scheda") + ".json";
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+              } catch (e) { setErrorMsg("Esportazione non riuscita: " + e.message); }
+            }}>⬇ Esporta</div>
+          ) : null}
           <div className="pg-tab add" onClick={addBlank} title="Crea scheda vuota">＋ Vuota</div>
           {activeId ? (
             <div className="pg-tab del" onClick={removeActive} title="Rimuovi PG corrente">✕ {(roster[activeId] && roster[activeId].name) || "PG"}</div>

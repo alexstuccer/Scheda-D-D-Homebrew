@@ -13,6 +13,7 @@ e107.js            <html>                     Motore di privilegi e talenti su u
                                                dei talenti al level-up (P-102, P-103), addestramento, schede della 10.6. Atteso: tutto OK.
 v107.js            <html> 390|1280            Interfaccia: CA in dettaglio (N-01), archivio, modificatore sospeso, talento al level-up
                                                con scelta, prezzo e accordo del master. Atteso: tutto OK. SHOT=prefisso salva le schermate.
+esporta.js         <html>                     10.7.11: «⬇ Esporta» accanto a «＋ Importa» scarica il JSON del PG corrente. Atteso: tutto OK.
 lista_tiro.js      <html>                     10.7.10: nell'elenco delle competenze toccare la riga tira, «Fissa» no (390 e 1280). Atteso: tutto OK.
 cartella.js        <html>                     10.7.9: collegare una cartella non fa perdere i personaggi del browser; niente «Cambia cartella»
                                                e niente gestione delle campagne (API dei file simulata). Atteso: tutto OK.

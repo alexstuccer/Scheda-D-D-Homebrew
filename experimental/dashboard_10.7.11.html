@@ -329,7 +329,7 @@ html,body{margin:0;padding:0;background:#1a1714}
 <script>
 /* Precompilato con esbuild da src/app.jsx: non modificare qui. */
 const { useState, useMemo, useRef, useEffect } = React;
-const APP_VERSION = "10.7.10";
+const APP_VERSION = "10.7.11";
 try {
   document.title = "La Gemma di San Batacchio \xB7 v" + APP_VERSION;
 } catch (e) {
@@ -4764,7 +4764,23 @@ function Dashboard() {
         }).join("/");
       })())
     );
-  }), /* @__PURE__ */ React.createElement("div", { className: "pg-tab add", onClick: triggerImport, title: "Importa schede JSON" }, "\uFF0B Importa"), /* @__PURE__ */ React.createElement("div", { className: "pg-tab add", onClick: addBlank, title: "Crea scheda vuota" }, "\uFF0B Vuota"), activeId ? /* @__PURE__ */ React.createElement("div", { className: "pg-tab del", onClick: removeActive, title: "Rimuovi PG corrente" }, "\u2715 ", roster[activeId] && roster[activeId].name || "PG") : null, /* @__PURE__ */ React.createElement(
+  }), /* @__PURE__ */ React.createElement("div", { className: "pg-tab add", onClick: triggerImport, title: "Importa schede JSON" }, "\uFF0B Importa"), activeId && roster[activeId] ? /* @__PURE__ */ React.createElement("div", { className: "pg-tab add", title: "Scarica la scheda del PG corrente come file JSON", onClick: function() {
+    try {
+      const ch2 = roster[activeId];
+      const url = URL.createObjectURL(new Blob([JSON.stringify(ch2, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = (ch2.name || "scheda") + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (e) {
+      setErrorMsg("Esportazione non riuscita: " + e.message);
+    }
+  } }, "\u2B07 Esporta") : null, /* @__PURE__ */ React.createElement("div", { className: "pg-tab add", onClick: addBlank, title: "Crea scheda vuota" }, "\uFF0B Vuota"), activeId ? /* @__PURE__ */ React.createElement("div", { className: "pg-tab del", onClick: removeActive, title: "Rimuovi PG corrente" }, "\u2715 ", roster[activeId] && roster[activeId].name || "PG") : null, /* @__PURE__ */ React.createElement(
     "input",
     {
       ref: fileInputRef,

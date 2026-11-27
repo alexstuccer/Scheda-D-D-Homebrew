@@ -144,7 +144,7 @@ const GX_CSS = `/* La Gemma di San Batacchio · strato di presentazione nuovo (s
 .gx[data-theme=per] .gx-sec .gx-lab{font-size:13px;color:var(--muted)}
 .gx[data-theme=per] .gx-sec .aux{display:none}
 .gx[data-theme=per] .gx-sec::before,.gx[data-theme=per] .gx-sec::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
-.gx[data-theme=per] .gx-tile.ca{clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);padding-bottom:12px}
+.gx[data-theme=per] .gx-tile.ca{border-radius:4px 4px 50% 50% / 4px 4px 26% 26%;padding-bottom:10px}
 .gx[data-theme=per] .gx-nav button[aria-current=true]{box-shadow:inset 0 3px 0 var(--acc)}
 .gx[data-theme=per] .gx-btn{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.6px}
 .gx[data-theme=per] .gx-hp .big{color:var(--bad);font-style:italic}
@@ -179,6 +179,41 @@ const GX_CSS = `/* La Gemma di San Batacchio · strato di presentazione nuovo (s
 .gx-hp>.gx-flex:first-child{flex-wrap:wrap}
 .gx-hp-r{flex:1 0 auto;justify-content:flex-end}
 .gx-grid4 button:disabled,.gx-btn:disabled{opacity:.4;cursor:default}
+/* 10.5.x MOBILE: il contenuto dei pannelli non si schiaccia (il selettore V/N/S era tagliato a metà) */
+.gx-sheet>div>*{flex-shrink:0}
+.gx-row .nm small s{opacity:.55}
+.gx-row .nm small b{color:var(--ink);font-weight:600}
+.gx-val.gx-nat20{color:var(--good)}
+.gx-val.gx-nat1{color:var(--bad)}
+.gx-mtag{font-style:normal;font-size:11px;font-weight:600;margin-left:6px;padding:0 5px;border:1px solid var(--line);border-radius:4px;color:var(--muted);vertical-align:1px}
+.gx-row .nm small .gx-ora{float:right;margin-left:8px;opacity:.7}
+.gx-storico{justify-content:space-between;align-items:center;margin-top:4px}
+/* riserva grande in una riga: barra corta, il nome resta leggibile */
+.gx-row>.gx-flex:has(>.gx-bar){max-width:96px}
+.gx-storico .gx-btn{min-height:30px;padding:0 10px}
+/* segmentati con 1, 2 o 5 opzioni (Modifica scheda, level-up, archivio): niente colonne vuote */
+.gx-segm:has(>button:only-child){grid-template-columns:1fr}
+.gx-segm:has(>button:nth-child(2):last-child){grid-template-columns:repeat(2,1fr)}
+.gx-segm:has(>button:nth-child(5):last-child){grid-template-columns:repeat(6,1fr)}
+.gx-segm:has(>button:nth-child(5):last-child)>button{grid-column:span 2}
+.gx-segm:has(>button:nth-child(5):last-child)>button:nth-child(n+4){grid-column:span 3;border-top:1px solid var(--line)}
+.gx-segm:has(>button:nth-child(5):last-child)>button:nth-child(4){border-left:0}
+@media (min-width:768px){.gx-segm:has(>button:nth-child(5):last-child){grid-template-columns:repeat(5,1fr)}.gx-segm:has(>button:nth-child(5):last-child)>button,.gx-segm:has(>button:nth-child(5):last-child)>button:nth-child(n+4){grid-column:auto;border-top:0}.gx-segm:has(>button:nth-child(5):last-child)>button:nth-child(4){border-left:1px solid var(--line)}}
+/* intestazione di sezione con nota lunga: la nota va a capo a destra, non sopra l'etichetta */
+.gx-sec{gap:12px}
+.gx-sec .aux{text-align:right;min-width:0}
+/* note di servizio in gx-lab con text-transform:none: testo normale, leggibile anche in Pergamena (Cinzel non ha minuscole) */
+.gx-lab[style*="text-transform: none"]{font-family:var(--font-body);letter-spacing:0;font-size:12.5px;line-height:1.35}
+/* scheda a quattro parti: due righe da due al telefono */
+.gx-segm.g4{grid-template-columns:repeat(2,1fr)}
+.gx-segm.g4 button:nth-child(3){border-left:0}
+.gx-segm.g4 button:nth-child(n+3){border-top:1px solid var(--line)}
+@media (min-width:768px){.gx-segm.g4{grid-template-columns:repeat(4,1fr)}.gx-segm.g4 button:nth-child(3){border-left:1px solid var(--line)}.gx-segm.g4 button:nth-child(n+3){border-top:0}}
+/* segmentato dentro una riga (FOR | DES): colonne quante sono le opzioni */
+.gx-row .gx-segm{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(56px,auto);flex:none}
+.gx-row .gx-segm button{padding:0 12px}
+/* riga con due stepper: al telefono il nome va sopra, gli stepper sotto */
+@media (max-width:767px){.gx-row:has(>.gx-step+.gx-step){flex-wrap:wrap;padding-top:8px;padding-bottom:8px}.gx-row:has(>.gx-step+.gx-step)>.nm{flex-basis:100%}.gx-row:has(>.gx-step+.gx-step)>.gx-step+.gx-step{margin-left:auto}}
 `;
 
 /* ═══ funzioni di presentazione (formattano, non calcolano) ═══ */
@@ -189,7 +224,11 @@ const GX_MODI = [["vantaggio", "Vantaggio"], ["normale", "Normale"], ["svantaggi
 const GX_CAR = [["Forza", "FOR"], ["Destrezza", "DES"], ["Costituzione", "COS"], ["Intelligenza", "INT"], ["Saggezza", "SAG"], ["Carisma", "CAR"]];
 const GX_RUOLI = { main: "mano principale", off: "mano secondaria", none: "" };
 const gxDanno = groups => (groups || []).map(g => g.dice + (g.flat ? fm(g.flat) : "") + (g.type ? " " + g.type : "")).join(" + ");
-const gxDadi = r => (Array.isArray(r.dice) ? r.dice.join("/") : (r.dice == null ? "" : String(r.dice)));
+/* due d20 (vantaggio/svantaggio): uno dei due è il dado tenuto (totale − mod); altrimenti i dadi si sommano */
+/* d20 con vantaggio/svantaggio: indice del dado tenuto. Dalla 10.7 lo dice r.chosen; per le voci senza, totale − mod */
+const gxScelto = r => (Array.isArray(r.dice) && r.dice.length === 2 && !r.parts ? r.dice.indexOf(r.chosen != null ? r.chosen : r.total - (r.mod || 0)) : -1);
+const gxDadi = r => (Array.isArray(r.dice) ? r.dice.join(gxScelto(r) >= 0 ? "/" : "+") : (r.dice == null ? "" : String(r.dice)));
+const gxDadiVis = r => { const k = gxScelto(r); if (k < 0) return gxDadi(r); return r.dice.map((d, i) => <span key={i}>{i ? "/" : ""}{i === k ? <b>{d}</b> : <s>{d}</s>}</span>); };
 const gxTestoTiro = r => r.label + (gxDadi(r) ? " · " + gxDadi(r) : "") + (typeof r.mod === "number" ? " " + fm(r.mod) : "");
 const gxVersione = v => (v != null ? v : (typeof APP_VERSION !== "undefined" ? APP_VERSION : ""));
 const gxClassi = C => C.classes.map(c => c.name + " " + c.level).join(" / ") + (C.race ? " · " + C.race.name : "");
@@ -254,19 +293,24 @@ function Pips({ max, rem }) {
   for (let i = 0; i < max; i++) out.push(<span key={i} className={"gx-pip" + (i < rem ? "" : " u")} />);
   return <div className="gx-pips">{out}</div>;
 }
-function Stepper({ value, min, max, onChange, label }) {
+function Stepper({ value, min, max, onChange, label, step }) {
+  const st = step || 1, r = v => Math.round(v * 10) / 10;   // step 1,5 per la velocità (10.7, N-02)
   return <div className="gx-step" role="group" aria-label={label}>
-    <button aria-label="Meno" disabled={value <= min} onClick={() => onChange(value - 1)}>{"−"}</button>
-    <b>{value}</b>
-    <button aria-label="Più" disabled={value >= max} onClick={() => onChange(value + 1)}>+</button>
+    <button aria-label="Meno" disabled={value <= min} onClick={() => onChange(r(value - st))}>{"−"}</button>
+    <b>{String(value).replace(".", ",")}</b>
+    <button aria-label="Più" disabled={value >= max} onClick={() => onChange(r(value + st))}>+</button>
   </div>;
 }
 function Toggle({ on, onChange, label }) {
   return <button className="gx-tog" aria-pressed={on} aria-label={label} onClick={() => onChange(!on)} />;
 }
+/* riserve grandi (oltre 12, es. Imposizione delle mani): due pulsanti, −1 e −5; onUsa riceve quanti */
 function ResourceCounter({ nome, max, usati, recupero, onUsa }) {
-  return <Row name={nome} sub={recupero}><Pips max={max} rem={max - usati} />
-    <Btn kind="q" disabled={usati >= max} onClick={onUsa}>Usa</Btn></Row>;
+  const rem = max - usati;
+  if (max > 12) return <Row name={nome} sub={recupero}><Pips max={max} rem={rem} />
+    <Btn kind="q" disabled={rem < 1} onClick={() => onUsa(1)}>{"−1"}</Btn><Btn kind="q" disabled={rem < 5} onClick={() => onUsa(5)}>{"−5"}</Btn></Row>;
+  return <Row name={nome} sub={recupero}><Pips max={max} rem={rem} />
+    <Btn kind="q" disabled={usati >= max} onClick={() => onUsa(1)}>Usa</Btn></Row>;
 }
 function Segmented({ mode, setMode }) {
   return <div className="gx-segm" role="group" aria-label="Modo dei tiri">
@@ -387,13 +431,33 @@ function PannelloRiposo({ C, tipo, onClose, side }) {
     <div className="gx-flex"><Btn kind="q" wide onClick={onClose}>Annulla</Btn><Btn kind="pri" wide onClick={() => { C.act.rest(tipo); onClose(); }}>Riposa</Btn></div>
   </Sheet>;
 }
+const GX_MODO_SIGLA = { vantaggio: "V", svantaggio: "S" };
+const gxOra = t => { if (!t) return ""; const d = new Date(t); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
+/* una voce dello storico: d20 (dado tenuto, modo, 20 e 1 naturali) o danni (parti con tipo, critico) */
+function VoceTiro({ r }) {
+  const d20 = r.die === 20 || (!r.parts && typeof r.mod === "number");
+  const nat = d20 ? (r.chosen != null ? r.chosen : (r.dice && r.dice.length === 1 ? r.dice[0] : null)) : null;
+  let sub;
+  if (r.parts && r.parts.length) {
+    sub = r.parts.map((p, i) => <span key={i}>{i ? " · " : ""}{p.dice}{p.rolls && p.rolls.length ? " [" + p.rolls.join("+") + "]" : ""}{p.flat ? " " + fm(p.flat) : ""}{p.type ? " " + p.type : ""}</span>);
+  } else sub = <>{gxDadiVis(r)}{typeof r.mod === "number" ? " " + fm(r.mod) : ""}</>;
+  const sigla = d20 ? GX_MODO_SIGLA[r.mode] : null;
+  const nome = <>{r.parts && r.crit ? "💥 " : ""}{r.label}{sigla ? <i className="gx-mtag" title={r.mode}>{sigla}</i> : null}</>;
+  return <Row name={nome} sub={<>{sub}<span className="gx-ora">{gxOra(r.t)}</span></>}>
+    <b className={"gx-val" + (nat === 20 ? " gx-nat20" : nat === 1 ? " gx-nat1" : "")}>{r.total}</b></Row>;
+}
 function PannelloTiri({ C, onClose, side }) {
+  const [conferma, setConferma] = useState(false);
+  useEffect(() => { if (!conferma) return; const t = setTimeout(() => setConferma(false), 4000); return () => clearTimeout(t); }, [conferma]);
+  const svuota = () => { if (!conferma) { setConferma(true); return; } setConferma(false); C.act.clearRolls(); };
+  const n = C.roll.history.length;
   return <Sheet titolo="Tiri" onClose={onClose} side={side}>
     <Segmented mode={C.roll.mode} setMode={C.act.setMode} />
     <div className="gx-grid4">{[4, 6, 8, 10, 12, 100].map(f => <button key={f} onClick={() => C.act.roll("d" + f, 0, { die: f })}>d{f}</button>)}
       <button style={{ gridColumn: "span 2" }} onClick={() => C.act.roll("d20 libero", 0, { die: 20 })}>d20 libero</button></div>
-    <span className="gx-lab">Storico</span>
-    <Card>{C.roll.history.length ? C.roll.history.slice(0, 12).map((r, i) => <Row key={r.t || i} name={r.label} sub={gxDadi(r) + (typeof r.mod === "number" ? " " + fm(r.mod) : "")}><b className="gx-val">{r.total}</b></Row>)
+    <div className="gx-flex gx-storico"><span className="gx-lab">Storico{n > 12 ? " · ultimi 12 di " + n : ""}</span>
+      {n && C.act.clearRolls ? <Btn kind={conferma ? "pri" : "q"} onClick={svuota}>{conferma ? "Svuoto? Conferma" : "Svuota"}</Btn> : null}</div>
+    <Card>{n ? C.roll.history.slice(0, 12).map((r, i) => <VoceTiro key={r.t || i} r={r} />)
       : <Row name={<small>Nessun tiro</small>} />}</Card>
   </Sheet>;
 }
@@ -415,7 +479,7 @@ function SceltaAspetto({ aspetto }) {
     {!largo ? <small className="gx-lab" style={{ textTransform: "none" }}>«Computer» serve uno schermo largo almeno 768 px.</small> : null}
   </React.Fragment>;
 }
-function PannelloAspetto({ aspetto, C, onClose, side, onBug, onEditor }) {
+function PannelloAspetto({ aspetto, C, onClose, side, onBug }) {
   return <Sheet titolo="Menu" onClose={onClose} side={side}>
     {C ? <div className="gx-flex">
       <Btn kind="q" wide disabled={!C.can.undo} onClick={() => C.act.undo()}>{"\u21b6"} Annulla</Btn>
@@ -423,7 +487,8 @@ function PannelloAspetto({ aspetto, C, onClose, side, onBug, onEditor }) {
     </div> : null}
     <SceltaAspetto aspetto={aspetto} />
     {typeof Stampa === "function" ? <Btn kind="q" onClick={() => window.print()}>Stampa la scheda</Btn> : null}
-    {onEditor ? <Btn kind="q" onClick={() => { onClose(); onEditor(); }} title="Creazione, level-up e modifiche che questa interfaccia non fa ancora">Editor completo</Btn> : null}
+    {C && C.ch.creationDone && !C.inLU ? <Btn kind="q" onClick={() => { onClose(); C.act.setMaster(true); }} title="Sblocca la scheda per modificare identità, caratteristiche, B/M e costi">Modifica scheda (Master)</Btn> : null}
+    {C ? <Btn kind="q" onClick={() => { C.act.exportJSON(); }}>Esporta il personaggio (JSON)</Btn> : null}
     {onBug ? <Btn kind="q" onClick={() => { onClose(); onBug(); }}>{"\ud83d\udc1e"} Segnala un problema</Btn> : null}
   </Sheet>;
 }
@@ -479,11 +544,13 @@ function Attacchi({ C, tiri }) {
     {C.maneuvers.length ? <div><Section label="Manovre" /><Card>{C.maneuvers.map(m =>
       <Row key={m.name} name={m.name} sub={[m.die ? "dado " + m.die : null, m.dc ? "CD " + m.dc : null].filter(Boolean).join(" · ")} value={m.tot} onRoll={() => C.act.roll(m.name, m.tot)} />)}</Card></div> : null}
     {usi.length ? <div><Section label="Privilegi" aux="usi" /><Card>{usi.map(f =>
-      <ResourceCounter key={f.key} nome={f.name} max={f.uses.max} usati={f.uses.spent} recupero={"riposo " + f.uses.rest + (f.dc ? " · CD " + f.dc : "")} onUsa={() => C.act.use(f.key, 1)} />)}</Card></div> : null}
+      <ResourceCounter key={f.key} nome={f.name} max={f.uses.max} usati={f.uses.spent} recupero={"riposo " + f.uses.rest + (f.dc ? " · CD " + f.dc : "")} onUsa={n => C.act.use(f.key, n || 1)} />)}</Card></div> : null}
   </div>;
 }
 function Magia({ C }) {
   const [open, setOpen] = useState(null);
+  const [cat, setCat] = useState(false);
+  const side = useGxMedia("(min-width:768px)") ? "right" : undefined;
   const pm = C.pm;
   const lvls = [];
   C.spells.forEach(s => { if (lvls.indexOf(s.level) < 0) lvls.push(s.level); });
@@ -509,6 +576,8 @@ function Magia({ C }) {
         onAttack={() => C.act.roll("Attacco · " + s.name, s.attack)}
         onDmg={() => C.act.rollDamage(s.name, [{ dice: s.dmg.dice, flat: 0, type: s.dmg.type }])} />)}</Card>
     </div>)}
+    <Repertorio C={C} onCatalogo={() => setCat(true)} />
+    {cat ? <CatalogoIncantesimi C={C} side={side} onClose={() => setCat(false)} /> : null}
   </div>;
 }
 /* Equipaggiamento (modificabile a scheda bloccata): si legge da C.equip. Armi con setWeapon e setDualWield, oggetti con
@@ -516,6 +585,8 @@ function Magia({ C }) {
 function Equipaggiamento({ C }) {
   const eq = C.equip;
   const [nuovo, setNuovo] = useState("");
+  const [pan, setPan] = useState(null);   // {tipo: "armi" | "arma" | "oggetto" | "protezioni", i}
+  const side = useGxMedia("(min-width:768px)") ? "right" : undefined;
   const items = eq.items || [];
   const armi = eq.weapons || [];
   const scegli = (gruppo, chiave) => {
@@ -528,6 +599,8 @@ function Equipaggiamento({ C }) {
   return <div>
     <Section label="Armatura e scudo" aux={"CA " + C.ca.total} />
     <Card>
+      {C.ca.parts && C.ca.parts.length ? <Row name={<small>{"CA " + C.ca.total + " = " + C.ca.testo}</small>} /> : null}
+      <div className="gx-row"><Btn kind="q" onClick={() => setPan({ tipo: "protezioni" })}>Modifica CA di armature e scudi</Btn></div>
       {Object.keys(eq.armor || {}).map(k => <Row key={k} name={"Armatura " + (nomiA[k] || k)} sub={"CA base " + eq.armor[k].caBase + (eq.armor[k].rank ? " · rank " + eq.armor[k].rank : "")}>
         <Toggle on={!!eq.armor[k].equipped} label={"Indossa armatura " + (nomiA[k] || k)} onChange={() => scegli("armor", k)} /></Row>)}
       {Object.keys(eq.shield || {}).map(k => <Row key={k} name={"Scudo " + (nomiS[k] || k)} sub={"CA " + fm(eq.shield[k].caBonus) + (eq.shield[k].rank ? " · rank " + eq.shield[k].rank : "")}>
@@ -537,26 +610,65 @@ function Equipaggiamento({ C }) {
     <Card>
       {armi.map(w => <Row key={w.i} name={w.name + (w.qty > 1 ? " ×" + w.qty : "")} sub={w.equipped ? (w.offHand ? "impugnata · mano secondaria" : "impugnata") : "nello zaino"}>
         {eq.dualWield && w.equipped ? <Chip on={!!w.offHand} onClick={() => C.act.setWeapon(w.i, { equipped: true, offHand: !w.offHand })}>Secondaria</Chip> : null}
-        <Toggle on={!!w.equipped} label={"Impugna " + w.name} onChange={on => C.act.setWeapon(w.i, { equipped: on, offHand: on ? !!w.offHand : false })} /></Row>)}
+        <Toggle on={!!w.equipped} label={"Impugna " + w.name} onChange={on => C.act.setWeapon(w.i, { equipped: on, offHand: on ? !!w.offHand : false })} />
+        <button className="gx-btn q" aria-label={"Proprietà di " + w.name} onClick={() => setPan({ tipo: "arma", i: w.i })}>{"⚙"}</button></Row>)}
+      <div className="gx-row"><Btn kind="q" onClick={() => setPan({ tipo: "armi" })}>+ Arma dal catalogo o da codice</Btn></div>
       <Row name="Combattere con due armi"><Toggle on={!!eq.dualWield} label="Combattere con due armi" onChange={on => C.act.setDualWield(on)} /></Row>
     </Card>
     <Section label="Oggetti" aux={load ? String(load.tot).replace(".", ",") + " / " + String(load.max).replace(".", ",") + " kg" + (load.over ? " · sovraccarico" : "") : null} />
     <Card>{items.map(it => <Row key={it.i} name={it.name} sub={[it.weight != null ? String(it.weight).replace(".", ",") + " kg" : null, it.desc, it.notes].filter(Boolean).join(" · ")}>
+      {it.equipped ? <span className="gx-tag">equip.</span> : null}
       <Stepper value={it.qty == null ? 1 : it.qty} min={0} max={9999} label={"Quantità " + it.name} onChange={v => C.act.setItem(it.i, { qty: v })} />
+      <button className="gx-btn q" aria-label={"Dettagli e bonus di " + it.name} onClick={() => setPan({ tipo: "oggetto", i: it.i })}>{"⚙"}</button>
       <button className="gx-btn q" aria-label={"Togli " + it.name} onClick={() => C.act.removeItem(it.i)}>{"✕"}</button></Row>)}
       <div className="gx-row"><input className="gx-inp" style={{ flex: 1 }} value={nuovo} placeholder="Nuovo oggetto" onChange={e => setNuovo(e.target.value)} />
         <Btn disabled={!nuovo.trim()} onClick={() => { C.act.addItem({ name: nuovo.trim(), qty: 1 }); setNuovo(""); }}>Aggiungi</Btn></div>
     </Card>
+    <Gemme C={C} />
     <Section label="Monete" />
     <Card>{[["mp", "Platino"], ["mo", "Oro"], ["me", "Electrum"], ["ma", "Argento"], ["mr", "Rame"]].map(m => <Row key={m[0]} name={m[1]}>
       <input className="gx-inp" type="number" min="0" inputMode="numeric" style={{ width: 96, textAlign: "right" }} aria-label={m[1]} value={(eq.coins || {})[m[0]] || 0}
         onChange={e => { const c = Object.assign({}, eq.coins); c[m[0]] = Math.max(0, parseInt(e.target.value, 10) || 0); C.act.setEquip({ coins: c }); }} /></Row>)}</Card>
+    {pan && pan.tipo === "armi" ? <CatalogoArmi C={C} side={side} onClose={() => setPan(null)} /> : null}
+    {pan && pan.tipo === "arma" && armi.filter(w => w.i === pan.i)[0] ? <ProprietaArma C={C} side={side} w={armi.filter(w => w.i === pan.i)[0]} onClose={() => setPan(null)} /> : null}
+    {pan && pan.tipo === "oggetto" && items.filter(x => x.i === pan.i)[0] ? <BonusOggetto C={C} side={side} it={items.filter(x => x.i === pan.i)[0]} onClose={() => setPan(null)} /> : null}
+    {pan && pan.tipo === "protezioni" ? <ProtezioniEdit C={C} side={side} onClose={() => setPan(null)} /> : null}
   </div>;
 }
-function Scheda({ C }) {
-  const [cat, setCat] = useState(null);
-  const [parte, setParte] = useState("competenze");
+/* Note libere del personaggio. Si salvano quando smetti di scrivere (mezzo secondo) o esci dal campo,
+   così annulla e ripeti non registrano ogni lettera. */
+function NoteScheda({ C }) {
+  const [t, setT] = useState(C.notes || "");
+  const fermo = useRef(null);
+  useEffect(() => { setT(C.notes || ""); }, [C.notes, C.ch.name]);
+  const salva = v => { if (fermo.current) clearTimeout(fermo.current); fermo.current = null; if (v !== (C.notes || "")) C.act.setNotes(v); };
+  const scrivi = v => { setT(v); if (fermo.current) clearTimeout(fermo.current); fermo.current = setTimeout(() => salva(v), 500); };
+  const ultimo = useRef(null); ultimo.current = { t, salva };
+  useEffect(() => () => { if (fermo.current) ultimo.current.salva(ultimo.current.t); }, []);   // cambio di schermata: salva quello che resta
   return <div>
+    <Section label="Note" aux={t.length ? t.length + " caratteri" : "vuote"} />
+    <Card style={{ padding: 0 }}><textarea value={t} onChange={e => scrivi(e.target.value)} onBlur={e => salva(e.target.value)}
+      placeholder="Storia, contatti, missioni, promemoria per la prossima sessione…" aria-label="Note del personaggio"
+      style={{ width: "100%", minHeight: 260, boxSizing: "border-box", resize: "vertical", border: 0, outline: "none", background: "transparent",
+        color: "var(--ink)", font: "inherit", fontSize: 15, lineHeight: 1.5, padding: 12 }} /></Card>
+  </div>;
+}
+/* Competenze per categoria, filtrate dalla ricerca (nome o categoria). */
+function gxGruppi(C, q) {
+  const t = (q || "").trim().toLowerCase();
+  const byI = {}; C.skills.forEach(s => { byI[s.i] = s; });
+  return C.cats.map(c => ({ name: c.name, skills: c.items.map(i => byI[i]).filter(s => s && (!t || s.name.toLowerCase().indexOf(t) >= 0 || c.name.toLowerCase().indexOf(t) >= 0)) }))
+    .filter(g => g.skills.length);
+}
+function Scheda({ C }) {
+  const [chiuse, setChiuse] = useState({});   // categorie richiuse a mano; di base sono tutte aperte
+  const [q, setQ] = useState("");
+  const [parte, setParte] = useState("competenze");
+  const [bm, setBm] = useState(false);
+  const side = useGxMedia("(min-width:768px)") ? "right" : undefined;
+  const gruppi = gxGruppi(C, q);
+  return <div>
+    {bm ? <Sheet titolo="B/M e costi delle competenze" side={side} onClose={() => setBm(false)}><EditCompetenze C={C} modoIniziale="bm" /></Sheet> : null}
     <Section label="Personaggio" aux={"livello " + C.tl} />
     <Card>
       <Row name="Razza" sub={C.race ? C.race.name : "—"} />
@@ -565,17 +677,19 @@ function Scheda({ C }) {
       <Row name="Caratteristiche" sub={GX_CAR.map(k => k[1] + " " + C.stats[k[0]].score).join(" · ")} />
       <Row name="Velocità" sub={gxMetri(C.speed.final) + (C.speed.overload ? " · sovraccarico" : "")} />
     </Card>
-    <div className="gx-segm" style={{ marginTop: 12 }} role="group" aria-label="Parte della scheda">
-      {[["competenze", "Competenze"], ["equip", "Equipaggiamento"]].map(p => <button key={p[0]} aria-pressed={parte === p[0]} onClick={() => setParte(p[0])}>{p[1]}</button>)}</div>
-    {parte === "equip" ? <Equipaggiamento C={C} /> : <div>
+    <div className="gx-segm g4" style={{ marginTop: 12 }} role="group" aria-label="Parte della scheda">
+      {[["competenze", "Competenze"], ["equip", "Equipaggiamento"], ["mod", "Modificatori"], ["note", "Note"]].map(p => <button key={p[0]} aria-pressed={parte === p[0]} onClick={() => setParte(p[0])}>{p[1]}</button>)}</div>
+    {parte === "note" ? <NoteScheda C={C} /> : parte === "mod" ? <div><PrivilegiTalenti C={C} /><Modificatori C={C} /></div> : parte === "equip" ? <Equipaggiamento C={C} /> : <div>
       <Section label="Competenze" aux={C.skills.length + " · " + C.cats.length + " categorie"} />
-      <Card>{C.cats.map(c => <div key={c.name}>
-        <button className="gx-row" aria-expanded={cat === c.name} onClick={() => setCat(cat === c.name ? null : c.name)}>
-          <span className="nm">{c.name}</span><span className="gx-tag">{c.items.length}</span><span className="gx-chev">{cat === c.name ? "⌄" : "›"}</span></button>
-        {cat === c.name ? c.items.map(i => { const s = C.skills.filter(x => x.i === i)[0]; return s ? <Row key={i} style={{ paddingLeft: 24 }} name={s.name} sub={s.attr + " · rank " + s.rank}>
+      <div className="gx-flex" style={{ gap: 8, marginBottom: 8 }}><Btn kind="q" onClick={() => setBm(true)}>B/M e costi delle competenze</Btn></div>
+      <SearchField value={q} onChange={setQ} placeholder={"Cerca tra " + C.skills.length + " competenze o per categoria"} />
+      <Card style={{ marginTop: 8 }}>{gruppi.length ? gruppi.map(g => { const aperta = !!q || !chiuse[g.name]; return <div key={g.name}>
+        <button className="gx-row" aria-expanded={aperta} onClick={() => setChiuse(Object.assign({}, chiuse, { [g.name]: aperta }))}>
+          <span className="nm" style={{ fontWeight: 700 }}>{g.name}</span><span className="gx-tag">{g.skills.length}</span><span className="gx-chev">{aperta ? "⌄" : "›"}</span></button>
+        {aperta ? g.skills.map(s => <Row key={s.i} style={{ paddingLeft: 24 }} name={s.name} sub={s.attr + " · rank " + s.rank + (s.bonus ? " · B/M " + fm(s.bonus) : "") + (s.tal ? " · mod. " + fm(s.tal) : "")}>
           <Chip on={s.pinned} onClick={() => C.act.pin(s.i)}>{s.pinned ? "Fissata" : "Fissa"}</Chip>
-          <button className="gx-val" style={{ minWidth: 48 }} aria-label={"Prova di " + s.name} onClick={() => C.act.roll(s.name, s.tot)}><span className={tone(s.tot)}>{fm(s.tot)}</span></button></Row> : null; }) : null}
-      </div>)}</Card></div>}
+          <button className="gx-val" style={{ minWidth: 48 }} aria-label={"Prova di " + s.name} onClick={() => C.act.roll(s.name, s.tot)}><span className={tone(s.tot)}>{fm(s.tot)}</span></button></Row>) : null}
+      </div>; }) : <Row name={<small>Nessuna competenza trovata.</small>} />}</Card></div>}
   </div>;
 }
 const SCHERMATE = { sessione: Sessione, attacchi: Attacchi, magia: Magia, scheda: Scheda };
@@ -585,7 +699,10 @@ function LevelUp({ C }) {
   const p = C.points;
   const [q, setQ] = useState("");
   const cancel = () => C.act.cancelLU();
-  const list = C.skills.filter(s => !q || s.name.toLowerCase().indexOf(q.toLowerCase()) >= 0).slice(0, 60);
+  const gruppi = gxGruppi(C, q);
+  const lu = C.lu || { cls: "", isNew: false, options: [] };
+  const [modo, setModo] = useState("rank");   // rank | bonus: lo stesso elenco modifica i rank o i bonus fissi
+  const [carOpen, setCarOpen] = useState(false);
   return <div className="gx-full">
     <div className="gx-wiz"><div className="gx-flex" style={{ justifyContent: "space-between" }}>
       <span className="gx-lab">Passaggio di livello {"·"} competenze</span>
@@ -593,24 +710,48 @@ function LevelUp({ C }) {
       <h2>Competenze</h2></div>
     <div className="gx-pool"><span style={{ fontSize: 13.5, color: "var(--muted)" }}>Punti competenza<br />spesi {p.luSpent} su {p.luAvail}</span>
       <b className={"gx-num " + tone(p.luRem)}>{p.luRem}</b></div>
-    <SearchField value={q} onChange={setQ} placeholder="Cerca competenza" />
-    <main className="gx-scroll"><Section label="Rank" aux="dal rank attuale al massimo del livello" />
-      <Card>{list.map(s => <Row key={s.i} name={s.name} sub={s.attr + " · costo " + s.cost + " · max " + s.luMax}>
-        <Stepper value={s.rank} min={s.luMin} max={s.luMax} label={s.name} onChange={v => C.act.setLURank(s.i, v)} /></Row>)}</Card></main>
+    <div className="gx-flex" style={{ margin: "8px 12px 0", gap: 8 }}>
+      <span className="gx-lab">Classe</span>
+      <select value={lu.cls} onChange={e => C.act.setLUClass && C.act.setLUClass(e.target.value)} aria-label="Classe che sale di livello"
+        style={{ flex: 1, height: 40, background: "var(--s2)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "0 8px", font: "inherit" }}>
+        {lu.options.map(o => <option key={o.name} value={o.name}>{o.isNew ? "+ " + o.name + " (nuova classe)" : o.name + " " + o.level + " → " + (o.level + 1)}</option>)}
+      </select>
+      {lu.isNew ? <span className="gx-tag" style={{ color: "var(--bad)" }}>−48 multiclasse</span> : null}</div>
+    <SearchField value={q} onChange={setQ} placeholder="Cerca competenza o categoria" />
+    <main className="gx-scroll">
+      {/* 10.7.7 (REGIA): l'aumento di caratteristica si vede da solo ai livelli con aumento, +2 da distribuire, massimo 20 */}
+      {C.luAumento && C.luAumento.possibile ? <div>
+        <Section label="Aumento di caratteristica" aux={"+" + C.luAumento.usati + " su +" + C.luAumento.max + " · massimo 20"} />
+        <Card>
+          {GX_CAR.map(k => <Row key={k[0]} name={k[0]} sub={"mod. " + fm(C.mods[k[0]])}>
+            <Stepper value={C.stats[k[0]].score} min={1} max={30} label={"Punteggio di " + k[0]} onChange={v => C.act.setLUStat(k[0], v)} /></Row>)}
+          <Row name={<small>{"Al " + C.luAumento.livello + "° livello di " + C.luAumento.classe + ": +2 a una caratteristica o +1 a due. Il talento qui sotto è facoltativo e si aggiunge all'aumento. Se hai già speso i punti in più, prima di togliere l'aumento togli qualche rank."}</small>} />
+        </Card></div> : null}
+      <button className="gx-row" aria-expanded={carOpen} onClick={() => setCarOpen(!carOpen)} style={{ marginTop: 8 }}>
+        <span className="nm" style={{ fontWeight: 700 }}>Bonus e PF</span><span className="gx-tag">B/M, PF bonus</span><span className="gx-chev">{carOpen ? "⌄" : "›"}</span></button>
+      {carOpen ? <Card>
+        {GX_CAR.map(k => <Row key={k[0]} name={k[0]} sub={"mod. " + fm(C.mods[k[0]]) + " · B/M " + fm(C.stats[k[0]].bonus || 0)}>
+          <Stepper value={C.stats[k[0]].bonus || 0} min={-10} max={10} label={"Bonus o malus al modificatore di " + k[0]} onChange={v => C.act.setStatBonus(k[0], v)} /></Row>)}
+        <Row name="PF bonus" sub="effetti permanenti decisi dal master">
+          <Stepper value={lu.hpBonus || 0} min={-99} max={999} label="PF bonus" onChange={v => C.act.setHpBonus(v)} /></Row>
+        <Row name={<small>Bonus o malus al modificatore e PF in più. L'aumento dei punteggi c'è solo ai livelli con aumento; fuori da lì lo cambia il master in Modifica scheda.</small>} />
+      </Card> : null}
+      <PrivilegiLivello C={C} />
+      <TalentoLivello C={C} />
+      <PrivilegiTalenti C={C} />
+      <div className="gx-segm" style={{ marginTop: 12 }} role="group" aria-label="Cosa modificare">
+        {[["rank", "Rank"], ["bonus", "Bonus fissi"]].map(m => <button key={m[0]} aria-pressed={modo === m[0]} onClick={() => setModo(m[0])}>{m[1]}</button>)}</div>
+      <Section label={modo === "rank" ? "Rank" : "Bonus fissi"} aux={modo === "rank" ? "primo rank 1; poi +2 a livello fino al 14°, da lì +1" : "stili di combattimento, privilegi, talenti: si sommano al totale"} />
+      {gruppi.map(g => <div key={g.name}><Section label={g.name} aux={g.skills.length} />
+        <Card>{g.skills.map(s => modo === "rank"
+          ? <Row key={s.i} name={s.name} sub={s.attr + " · costo " + s.cost + " · rank " + s.luMin + (s.rank > s.luMin ? " → " + s.rank : "") + " · max " + s.luMax + (s.bonus ? " · bonus " + fm(s.bonus) : "")}>
+              <Stepper value={s.rank} min={s.luMin} max={s.luMax} label={s.name} onChange={v => C.act.setLURank(s.i, v)} /></Row>
+          : <Row key={s.i} name={s.name} sub={s.attr + " · totale " + fm(s.tot)}>
+              <Stepper value={s.bonus || 0} min={-10} max={10} label={"Bonus fisso di " + s.name} onChange={v => C.act.setSkillBonus(s.i, v)} /></Row>)}</Card></div>)}</main>
     <div className="gx-foot"><Btn kind="q" onClick={cancel}>Annulla</Btn>
       <Btn kind="pri" disabled={p.luRem < 0} title={p.luRem < 0 ? "Punti negativi" : null} onClick={() => C.act.applyLU()}>Applica</Btn></div>
   </div>;
 }
-function CreaClassica({ C, onClassica }) {
-  return <div className="gx-full">
-    <div className="gx-wiz"><div className="gx-flex" style={{ justifyContent: "space-between" }}>
-      <span className="gx-lab">Nuovo personaggio</span><span className="gx-ver">v{gxVersione(C.version)}</span></div>
-      <h2>Creazione</h2></div>
-    <main className="gx-scroll"><Card><Row name="La creazione guidata arriva più avanti" sub="Per ora il personaggio si crea nell'editor completo; poi «Torna alla scheda» riporta qui." /></Card></main>
-    <div className="gx-foot" style={{ gridTemplateColumns: "1fr" }}><Btn kind="pri" wide disabled={!onClassica} onClick={onClassica}>Crea nell'editor completo</Btn></div>
-  </div>;
-}
-
 /* ═══ 5 · INGRESSO ═══ */
 function useGxToast(C) {
   const h = C.roll.history;
@@ -649,9 +790,10 @@ function NuovaUI({ C, onClassica, onBug }) {
         <RollToast last={toast} />
         {pan === "tiri" ? <PannelloTiri C={C} onClose={() => setPan(null)} /> : null}
       </React.Fragment>}
-    {pan === "aspetto" ? <PannelloAspetto aspetto={aspetto} C={C} side={side} onBug={onBug ? () => onBug({ schermata: largo ? "desktop" : scr }) : null} onEditor={onClassica} onClose={() => setPan(null)} /> : null}
+    {pan === "aspetto" ? <PannelloAspetto aspetto={aspetto} C={C} side={side} onBug={onBug ? () => onBug({ schermata: largo ? "desktop" : scr }) : null} onClose={() => setPan(null)} /> : null}
     {C.inLU ? <LevelUp C={C} /> : null}
-    {!C.creationDone ? <CreaClassica C={C} onClassica={onClassica} /> : null}
+    {!C.creationDone ? <Creazione C={C} /> : null}
+    {C.master ? <ModificaScheda C={C} /> : null}
     {typeof Stampa === "function" ? <Stampa C={C} /> : null}
   </div>;
 }

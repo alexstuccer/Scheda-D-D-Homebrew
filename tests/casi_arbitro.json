@@ -1,0 +1,2031 @@
+{
+ "formato": "casi ARBITRO, versione 1",
+ "riferimento": {
+  "versione": "10.1.1",
+  "sha256": "d1411a672de386453a3b3cce6b6552e32cb36d47bd094418074bd98a42141b4f"
+ },
+ "note": "Ogni pg è un ch come lo salva la scheda, scritto come differenza da INIT: lo script lo ricompone con { ...INIT, ...pg } in profondità. skills va per nome (o «Categoria/Nome» se il nome si ripete), non per indice. stato_10_1_1: «torna» o «da fare» con la sigla del commento approvato.",
+ "pg": {
+  "mago20": {
+   "name": "Mago 20",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 20
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 16,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "mago5": {
+   "name": "Mago 5",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 16,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "guerriero5": {
+   "name": "Guerriero 5",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 16,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "pal5_str3": {
+   "name": "Paladino 5 / Stregone 3",
+   "classes": [
+    {
+     "name": "Paladino",
+     "level": 5
+    },
+    {
+     "name": "Stregone",
+     "level": 3
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 16
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "cav_mistico5": {
+   "name": "Cavaliere mistico 5",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5,
+     "sub": "guerriero.cavaliere_mistico"
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 14,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "mistificatore20": {
+   "name": "Mistificatore arcano 20",
+   "classes": [
+    {
+     "name": "Ladro",
+     "level": 20,
+     "sub": "ladro.mistificatore_arcano"
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 14,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "ranger9_warlock3": {
+   "name": "Ranger 9 / Warlock 3",
+   "classes": [
+    {
+     "name": "Ranger",
+     "level": 9
+    },
+    {
+     "name": "Warlock",
+     "level": 3
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 14,
+    "Carisma": 14
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "leggera_r0": {
+   "name": "Leggera rank 0",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "light": {
+      "caBase": 1,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "media_r0": {
+   "name": "Media rank 0",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "medium": {
+      "caBase": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "pesante_r0": {
+   "name": "Pesante rank 0",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "heavy": {
+      "caBase": 6,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "media_r10": {
+   "name": "Media rank 10",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "skills": {
+    "Armature Medie": 10
+   },
+   "equipment": {
+    "armor": {
+     "medium": {
+      "caBase": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "ts_forza": {
+   "name": "TS Forza rank 0",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 14,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "abiurazione": {
+   "name": "Abiurazione via Invocazione",
+   "classes": [
+    {
+     "name": "Mago",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 18,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "skills": {
+    "Invocazione": 9
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "trappole": {
+   "name": "Trappole via Osservazione",
+   "classes": [
+    {
+     "name": "Ladro",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 14,
+    "Carisma": 10
+   },
+   "skills": {
+    "Osservazione e Percezione": 12
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "coltelli": {
+   "name": "Coltelli via Spade",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 16,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "ma": "Forza",
+   "skills": {
+    "Spade": 9
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "p78_media_scudo": {
+   "name": "P-78 media rank 10 e scudo grande",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 16,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "skills": {
+    "Armature Medie": 10
+   },
+   "equipment": {
+    "armor": {
+     "medium": {
+      "caBase": 4,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    },
+    "shield": {
+     "large": {
+      "caBonus": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "p78_scudo": {
+   "name": "P-78 senza armatura con scudo grande",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 16,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "shield": {
+     "large": {
+      "caBonus": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "p78_leggera_scudo": {
+   "name": "P-78 leggera rank 0 e scudo grande",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 12,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "light": {
+      "caBase": 1,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    },
+    "shield": {
+     "large": {
+      "caBonus": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "pesante_des16": {
+   "name": "Pesante rank 0, Des +3",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 16,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "heavy": {
+      "caBase": 8,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "pesante16_desm1": {
+   "name": "Pesante CA 16, rank 0, Des -1",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 5
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 8,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "heavy": {
+      "caBase": 16,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "carico_80": {
+   "name": "Carico 80 kg, For 10",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "items": [
+     {
+      "name": "Sacchi",
+      "desc": "",
+      "weight": 80,
+      "value": 0,
+      "notes": ""
+     }
+    ]
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "carico_75": {
+   "name": "Carico 75 kg, For 10",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "items": [
+     {
+      "name": "Sacchi",
+      "desc": "",
+      "weight": 75,
+      "value": 0,
+      "notes": ""
+     }
+    ]
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "basso_carico_80": {
+   "name": "Altezza 115, carico 80 kg",
+   "height": 115,
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "items": [
+     {
+      "name": "Sacchi",
+      "desc": "",
+      "weight": 80,
+      "value": 0,
+      "notes": ""
+     }
+    ]
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "scudo_grande": {
+   "name": "Solo scudo grande",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "shield": {
+     "large": {
+      "caBonus": 3,
+      "bonusSpec": 0,
+      "equipped": true
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "piastre": {
+   "name": "Armatura a piastre",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 1
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "armor": {
+     "heavy": {
+      "caBase": 8,
+      "bonusSpec": 0,
+      "equipped": true,
+      "weight": 32.5
+     }
+    }
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "vecchi_danni": {
+   "name": "Arma magica con nomi vecchi",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 3
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "weapons": [
+     {
+      "id": "spada_lunga",
+      "qty": 1,
+      "equipped": true,
+      "special": {
+       "isMagic": true,
+       "extraDamage": [
+        {
+         "dice": "1d6",
+         "damageType": "Impatto",
+         "condition": "always",
+         "creatureType": ""
+        }
+       ],
+       "grantsResistance": "Radiante"
+      }
+     }
+    ]
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  },
+  "vecchi_danni_arma": {
+   "name": "Nomi vecchi a livello di arma",
+   "classes": [
+    {
+     "name": "Guerriero",
+     "level": 3
+    }
+   ],
+   "stats": {
+    "Forza": 10,
+    "Destrezza": 10,
+    "Costituzione": 10,
+    "Intelligenza": 10,
+    "Saggezza": 10,
+    "Carisma": 10
+   },
+   "equipment": {
+    "weapons": [
+     {
+      "id": "spada_lunga",
+      "qty": 1,
+      "equipped": true,
+      "special": null,
+      "extraDamage": [
+       {
+        "dice": "1d6",
+        "damageType": "Taglio",
+        "condition": "always",
+        "creatureType": ""
+       }
+      ],
+      "grantsResistance": "Perforazione"
+     }
+    ]
+   },
+   "raceId": "umano",
+   "creationDone": true,
+   "locked": true
+  }
+ },
+ "casi": [
+  {
+   "id": "C01",
+   "rif": "A-01",
+   "caso": "Desiderio (9°) a PM 0, Soglia 9",
+   "regola": "R4.14, P-15",
+   "pg": "mago20",
+   "calcolo": {
+    "f": "overcastCD",
+    "livello": 9,
+    "aSecco": true
+   },
+   "atteso": 20,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C02",
+   "rif": "A-01",
+   "caso": "Palla di Fuoco al 6°, Soglia 3, a secco",
+   "regola": "R4.14, P-15",
+   "pg": "mago5",
+   "calcolo": {
+    "f": "overcastCD",
+    "livello": 6,
+    "aSecco": true
+   },
+   "atteso": 35,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C03",
+   "rif": "R4.14",
+   "caso": "Palla di Fuoco al 6°, Soglia 3",
+   "regola": "R4.14",
+   "pg": "mago5",
+   "calcolo": {
+    "f": "overcastCD",
+    "livello": 6,
+    "aSecco": false
+   },
+   "atteso": 28,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C04",
+   "rif": "A-01",
+   "caso": "Non incantatore, incantesimo di 2° a secco",
+   "regola": "R4.14, P-15",
+   "pg": "guerriero5",
+   "calcolo": {
+    "f": "overcastCD",
+    "livello": 2,
+    "aSecco": true
+   },
+   "atteso": 17,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C05",
+   "rif": "A-02",
+   "caso": "Pedaggio al 6°, tiro riuscito",
+   "regola": "R4.16",
+   "pg": "mago5",
+   "calcolo": {
+    "f": "overcastDamage",
+    "livello": 6,
+    "esito": "ok"
+   },
+   "atteso": 18,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C06",
+   "rif": "R4.16",
+   "caso": "Pedaggio al 6°, tiro fallito",
+   "regola": "R4.16",
+   "pg": "mago5",
+   "calcolo": {
+    "f": "overcastDamage",
+    "livello": 6,
+    "esito": "fail"
+   },
+   "atteso": 36,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C07",
+   "rif": "R4.16",
+   "caso": "Pedaggio al 6°, 1 naturale",
+   "regola": "R4.16",
+   "pg": "mago5",
+   "calcolo": {
+    "f": "overcastDamage",
+    "livello": 6,
+    "esito": "nat1"
+   },
+   "atteso": 72,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C08",
+   "rif": "R4.20",
+   "caso": "Mago 20: [PM, Soglia]",
+   "regola": "R4.20",
+   "pg": "mago20",
+   "calcolo": {
+    "f": "pmSoglia"
+   },
+   "atteso": [
+    89,
+    9
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C09",
+   "rif": "R4.19",
+   "caso": "Paladino 5 + Stregone 3: [PM, Soglia]",
+   "regola": "R4.19",
+   "pg": "pal5_str3",
+   "calcolo": {
+    "f": "pmSoglia"
+   },
+   "atteso": [
+    16,
+    2
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C10",
+   "rif": "A-05",
+   "caso": "Guerriero 5 Cavaliere mistico: [PM, Soglia]",
+   "regola": "R4.19, A-05",
+   "pg": "cav_mistico5",
+   "calcolo": {
+    "f": "pmSoglia"
+   },
+   "atteso": [
+    3,
+    1
+   ],
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-05"
+  },
+  {
+   "id": "C11",
+   "rif": "A-05",
+   "caso": "Ladro 20 Mistificatore arcano: [PM, Soglia]",
+   "regola": "R4.19, A-05",
+   "pg": "mistificatore20",
+   "calcolo": {
+    "f": "pmSoglia"
+   },
+   "atteso": [
+    23,
+    4
+   ],
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-05"
+  },
+  {
+   "id": "C12",
+   "rif": "A-06",
+   "caso": "Ranger 9 + Warlock 3: riserve [ordinari, patto]",
+   "regola": "P-53",
+   "pg": "ranger9_warlock3",
+   "calcolo": {
+    "f": "pmRiserve"
+   },
+   "atteso": [
+    16,
+    4
+   ],
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-06"
+  },
+  {
+   "id": "C13",
+   "rif": "B-10",
+   "caso": "Warlock tra le classi",
+   "regola": "P-76",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "CLASSES.includes('Warlock')"
+   },
+   "atteso": true,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C14",
+   "rif": "A-07",
+   "caso": "Monaco senza caratteristica da incantatore",
+   "regola": "A-07",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "MS.Monaco === undefined"
+   },
+   "atteso": true,
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-07"
+  },
+  {
+   "id": "C15",
+   "rif": "A-13",
+   "caso": "Limite Des, leggera rank 0",
+   "regola": "R3.2",
+   "pg": "leggera_r0",
+   "calcolo": {
+    "f": "calcDexCap"
+   },
+   "atteso": -1,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C16",
+   "rif": "A-13",
+   "caso": "Limite Des, media rank 0",
+   "regola": "R3.2",
+   "pg": "media_r0",
+   "calcolo": {
+    "f": "calcDexCap"
+   },
+   "atteso": -6,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C17",
+   "rif": "A-13",
+   "caso": "Limite Des, pesante rank 0",
+   "regola": "R3.2",
+   "pg": "pesante_r0",
+   "calcolo": {
+    "f": "calcDexCap"
+   },
+   "atteso": -8,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C18",
+   "rif": "R3.2",
+   "caso": "Limite Des, media rank 10",
+   "regola": "R3.2",
+   "pg": "media_r10",
+   "calcolo": {
+    "f": "calcDexCap"
+   },
+   "atteso": 1,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C19",
+   "rif": "A-19",
+   "caso": "TS Forza rank 0, For +2 (P-97: niente −3 ai TS senza rank)",
+   "regola": "R2.11",
+   "pg": "ts_forza",
+   "calcolo": {
+    "f": "tot",
+    "abilita": "Tiri Salvezza/Forza"
+   },
+   "atteso": 2,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C20",
+   "rif": "A-08",
+   "caso": "Abiurazione 0 con Invocazione 9, Int +4",
+   "regola": "R2.11",
+   "pg": "abiurazione",
+   "calcolo": {
+    "f": "tot",
+    "abilita": "Abiurazione"
+   },
+   "atteso": 1,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C21",
+   "rif": "A-20",
+   "caso": "Individuare trappole 0 con Osservazione 12, Sag +2",
+   "regola": "R2.11",
+   "pg": "trappole",
+   "calcolo": {
+    "f": "tot",
+    "abilita": "Individuare trappole"
+   },
+   "atteso": -1,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C22",
+   "rif": "R2.11",
+   "caso": "Coltelli 0 con Spade 9, For +3",
+   "regola": "R2.11",
+   "pg": "coltelli",
+   "calcolo": {
+    "f": "tot",
+    "abilita": "Coltelli e Pugnali"
+   },
+   "atteso": 3,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C23",
+   "rif": "A-21",
+   "caso": "Osservazione e Percezione su Saggezza",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "attr",
+    "abilita": "Osservazione e Percezione"
+   },
+   "atteso": "Saggezza",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C24",
+   "rif": "A-21",
+   "caso": "Pronto Soccorso su Intelligenza",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "attr",
+    "abilita": "Pronto Soccorso"
+   },
+   "atteso": "Intelligenza",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C25",
+   "rif": "A-22",
+   "caso": "Costi di Attacco di Manovra (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Attacco di Manovra"
+   },
+   "atteso": [
+    3,
+    3,
+    1,
+    3,
+    3,
+    1,
+    3,
+    2,
+    3,
+    2,
+    2,
+    3,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C26",
+   "rif": "A-22",
+   "caso": "Costi di Attacco Preciso (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Attacco Preciso"
+   },
+   "atteso": [
+    3,
+    3,
+    1,
+    3,
+    3,
+    1,
+    3,
+    1,
+    3,
+    2,
+    2,
+    1,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C27",
+   "rif": "A-22",
+   "caso": "Costi di Parata (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Parata"
+   },
+   "atteso": [
+    3,
+    3,
+    1,
+    3,
+    3,
+    1,
+    3,
+    2,
+    3,
+    2,
+    2,
+    1,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C28",
+   "rif": "A-22",
+   "caso": "Costi di Passi Elusivi (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Passi Elusivi"
+   },
+   "atteso": [
+    3,
+    3,
+    2,
+    3,
+    3,
+    1,
+    3,
+    1,
+    3,
+    1,
+    2,
+    1,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C29",
+   "rif": "A-22",
+   "caso": "Costi di Colpo di Scudo (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Colpo di Scudo"
+   },
+   "atteso": [
+    3,
+    3,
+    2,
+    3,
+    3,
+    1,
+    3,
+    3,
+    3,
+    3,
+    1,
+    2,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C30",
+   "rif": "A-22",
+   "caso": "Costi di Cucinare (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Cucinare"
+   },
+   "atteso": [
+    1,
+    2,
+    2,
+    3,
+    3,
+    2,
+    3,
+    1,
+    3,
+    3,
+    2,
+    1,
+    3
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C31",
+   "rif": "A-22",
+   "caso": "Costi di Lettura Rune (Artefice … Stregone)",
+   "regola": "Costi di classe",
+   "pg": null,
+   "calcolo": {
+    "f": "costi",
+    "abilita": "Lettura Rune"
+   },
+   "atteso": [
+    1,
+    1,
+    3,
+    1,
+    1,
+    3,
+    1,
+    3,
+    1,
+    3,
+    1,
+    1,
+    1
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C32",
+   "rif": "A-23",
+   "caso": "Disimpegno fuori dalla scheda",
+   "regola": "P-81",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "!SD.some(function(s){return s.n==='Disimpegno' && !s.hidden})"
+   },
+   "atteso": true,
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-23"
+  },
+  {
+   "id": "C33",
+   "rif": "A-27",
+   "caso": "Elettro: 1 me = 0,5 mo",
+   "regola": "P-82",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "COIN_MO.me"
+   },
+   "atteso": 0.5,
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-27"
+  },
+  {
+   "id": "C34",
+   "rif": "B-14",
+   "caso": "Peso della spada lunga",
+   "regola": "P-82",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "WEAPONS_DB.find(function(w){return w.id==='spada_lunga'}).weight"
+   },
+   "atteso": 1.5,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C35",
+   "rif": "B-11",
+   "caso": "Nome di stella_del_mattino",
+   "regola": "B-11",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "WEAPONS_DB.find(function(w){return w.id==='stella_del_mattino'}).name"
+   },
+   "atteso": "Mazza chiodata",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C36",
+   "rif": "B-11",
+   "caso": "Nome di mazza_chiodata (storica)",
+   "regola": "B-11",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "WEAPONS_DB.find(function(w){return w.id==='mazza_chiodata'}).name"
+   },
+   "atteso": "Mazza ferrata",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C37",
+   "rif": "B-15",
+   "caso": "Mazzafrusto senza proprietà",
+   "regola": "Manuale 2014",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "WEAPONS_DB.find(function(w){return w.id==='mazzafrusto'}).props"
+   },
+   "atteso": "",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C38",
+   "rif": "B-01",
+   "caso": "Scuola di Onda Tonante",
+   "regola": "Manuale 2014",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "thunderwave",
+    "campo": "school"
+   },
+   "atteso": "Invocazione",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C39",
+   "rif": "B-01",
+   "caso": "Scuola di Rinascita (revivify)",
+   "regola": "Manuale 2014",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "revivify",
+    "campo": "school"
+   },
+   "atteso": "Necromanzia",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C40",
+   "rif": "B-02",
+   "caso": "Voci con l'Artefice nelle classi",
+   "regola": "P-75",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "SPELLS_DB.some(function(s){return (s.classesHb||[]).indexOf('Artefice')>=0})"
+   },
+   "atteso": true,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C41",
+   "rif": "B-07",
+   "caso": "Livelli non numerici nel database",
+   "regola": "B-07",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "SPELLS_DB.filter(function(s){return typeof s.level!=='number'}).length"
+   },
+   "atteso": 0,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C42",
+   "rif": "B-04",
+   "caso": "nameEn doppi nel database",
+   "regola": "B-04",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "(function(){var m={},n=0;SPELLS_DB.forEach(function(s){var k=(s.nameEn||'').toLowerCase();if(k){m[k]=(m[k]||0)+1;if(m[k]===2)n++}});return n})()"
+   },
+   "atteso": 0,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C43",
+   "rif": "P-78",
+   "caso": "Des +3, media rank 10, scudo grande: CA nel riquadro",
+   "regola": "P-78, R3.6",
+   "pg": "p78_media_scudo",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caPersonaggio"
+   },
+   "atteso": 16,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C44",
+   "rif": "P-78",
+   "caso": "Stesso PG: dettaglio della CA",
+   "regola": "P-78",
+   "pg": "p78_media_scudo",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caDettaglio"
+   },
+   "atteso": "− 1 DES",
+   "stato_10_1_1": "torna",
+   "confronto": "contiene"
+  },
+  {
+   "id": "C45",
+   "rif": "P-78",
+   "caso": "Des +3, senza armatura, scudo grande: CA",
+   "regola": "P-78",
+   "pg": "p78_scudo",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caPersonaggio"
+   },
+   "atteso": 14,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C46",
+   "rif": "P-78",
+   "caso": "Des +1, leggera rank 0, scudo grande: CA",
+   "regola": "P-78",
+   "pg": "p78_leggera_scudo",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caPersonaggio"
+   },
+   "atteso": 11,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C47",
+   "rif": "A-13",
+   "caso": "Des +3, pesante rank 0: CA",
+   "regola": "P-09, R3.2",
+   "pg": "pesante_des16",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caPersonaggio"
+   },
+   "atteso": 10,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C48",
+   "rif": "P-79",
+   "caso": "Des +3, pesante rank 0: iniziativa a Destrezza piena",
+   "regola": "P-79, P-29",
+   "pg": "pesante_des16",
+   "calcolo": {
+    "f": "ui",
+    "campo": "iniziativa"
+   },
+   "atteso": "+3",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C49",
+   "rif": "P-79",
+   "caso": "Des +3, pesante rank 0: velocità con la Destrezza della CA",
+   "regola": "P-79, R1.8bis",
+   "pg": "pesante_des16",
+   "calcolo": {
+    "f": "ui",
+    "campo": "velocita"
+   },
+   "atteso": 6,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C50",
+   "rif": "P-80",
+   "caso": "Umano 170 cm, For 10, 80 kg: velocità dimezzata",
+   "regola": "P-80",
+   "pg": "carico_80",
+   "calcolo": {
+    "f": "ui",
+    "campo": "velocita"
+   },
+   "atteso": 4.5,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C51",
+   "rif": "P-80",
+   "caso": "Umano 115 cm, For 10, 80 kg: 7,5 m → 3,5 m",
+   "regola": "P-80",
+   "pg": "basso_carico_80",
+   "calcolo": {
+    "f": "ui",
+    "campo": "velocita"
+   },
+   "atteso": 3.5,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C52",
+   "rif": "P-80",
+   "caso": "Umano 170 cm, For 10, 75 kg: non sovraccarico",
+   "regola": "P-80",
+   "pg": "carico_75",
+   "calcolo": {
+    "f": "ui",
+    "campo": "velocita"
+   },
+   "atteso": 9.5,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C53",
+   "rif": "P-82",
+   "caso": "Capacità di carico con For 10",
+   "regola": "P-82",
+   "pg": "carico_75",
+   "calcolo": {
+    "f": "ui",
+    "campo": "capacita"
+   },
+   "atteso": "/ 75 kg",
+   "stato_10_1_1": "torna",
+   "confronto": "contiene"
+  },
+  {
+   "id": "C54",
+   "rif": "REGIA",
+   "caso": "Pesante CA 16, rank 0, Des −1: CA nel riquadro in alto",
+   "regola": "P-09, P-78",
+   "pg": "pesante16_desm1",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caPersonaggio"
+   },
+   "atteso": 18,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C55",
+   "rif": "REGIA",
+   "caso": "Stesso PG: CA nell'Equipaggiamento",
+   "regola": "P-09",
+   "pg": "pesante16_desm1",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caEquip"
+   },
+   "atteso": 18,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C56",
+   "rif": "REGIA",
+   "caso": "Stesso PG: dettaglio «− 8 DES»",
+   "regola": "P-09",
+   "pg": "pesante16_desm1",
+   "calcolo": {
+    "f": "ui",
+    "campo": "caDettaglio"
+   },
+   "atteso": "− 8 DES",
+   "stato_10_1_1": "torna",
+   "confronto": "contiene"
+  },
+  {
+   "id": "C57",
+   "rif": "B-14",
+   "caso": "Armi del Manuale nel database",
+   "regola": "B-14",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "WEAPONS_DB.filter(function(w){return w.source==='PHB'}).length"
+   },
+   "atteso": 37,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C58",
+   "rif": "B-14",
+   "caso": "Armi del Manuale con peso diverso da libbre × 0,5 (dardo escluso, 0,1)",
+   "regola": "P-82",
+   "pg": null,
+   "calcolo": {
+    "f": "pesiPHB",
+    "libbre": {
+     "Club": 2,
+     "Dagger": 1,
+     "Greatclub": 10,
+     "Handaxe": 2,
+     "Javelin": 2,
+     "Light hammer": 2,
+     "Mace": 4,
+     "Quarterstaff": 4,
+     "Sickle": 2,
+     "Spear": 3,
+     "Light crossbow": 5,
+     "Shortbow": 2,
+     "Sling": 0,
+     "Battleaxe": 4,
+     "Flail": 2,
+     "Glaive": 6,
+     "Greataxe": 7,
+     "Greatsword": 6,
+     "Halberd": 6,
+     "Lance": 6,
+     "Longsword": 3,
+     "Maul": 10,
+     "Morningstar": 4,
+     "Pike": 18,
+     "Rapier": 2,
+     "Scimitar": 3,
+     "Shortsword": 2,
+     "Trident": 4,
+     "War pick": 2,
+     "Warhammer": 2,
+     "Whip": 3,
+     "Blowgun": 1,
+     "Hand crossbow": 3,
+     "Heavy crossbow": 18,
+     "Longbow": 2,
+     "Net": 3
+    }
+   },
+   "atteso": [],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C59",
+   "rif": "P-84",
+   "caso": "Scudo grande nel carico",
+   "regola": "P-84",
+   "pg": "scudo_grande",
+   "calcolo": {
+    "f": "equipWeight"
+   },
+   "atteso": 5,
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-26"
+  },
+  {
+   "id": "C60",
+   "rif": "A-26",
+   "caso": "Armatura indossata nel carico",
+   "regola": "P-82",
+   "pg": "piastre",
+   "calcolo": {
+    "f": "equipWeight"
+   },
+   "atteso": 0,
+   "stato_10_1_1": "da fare",
+   "da_fare": "A-26",
+   "confronto": "maggiore"
+  },
+  {
+   "id": "C61",
+   "rif": "P-83",
+   "caso": "Tipi di danno del database fuori dai 13",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "(function(){var ok=[\"acido\", \"contundente\", \"forza\", \"freddo\", \"fulmine\", \"fuoco\", \"necrotico\", \"perforante\", \"psichico\", \"radioso\", \"tagliente\", \"tuono\", \"veleno\"];var s={};SPELLS_DB.forEach(function(d){if(d.damage&&d.damage.type&&ok.indexOf(d.damage.type)<0)s[d.damage.type]=1});return Object.keys(s)})()"
+   },
+   "atteso": [],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C62",
+   "rif": "P-83",
+   "caso": "Tipi di danno delle armi fuori da Contundente, Perforante, Tagliente",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "(function(){var ok=['Contundente','Perforante','Tagliente'];var s={};WEAPONS_DB.forEach(function(w){if(w.dmgType!=='—')w.dmgType.split('/').forEach(function(p){if(ok.indexOf(p)<0)s[w.dmgType]=1})});return Object.keys(s)})()"
+   },
+   "atteso": [],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C63",
+   "rif": "B-13",
+   "caso": "Editor armi: danni fisici",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "PHYS_DMG_TYPES"
+   },
+   "atteso": [
+    "Contundente",
+    "Perforante",
+    "Tagliente"
+   ],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C64",
+   "rif": "B-13",
+   "caso": "Editor armi: tipi elementali fuori dai 13",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "ELEM_DMG_TYPES.filter(function(x){return [\"acido\", \"contundente\", \"forza\", \"freddo\", \"fulmine\", \"fuoco\", \"necrotico\", \"perforante\", \"psichico\", \"radioso\", \"tagliente\", \"tuono\", \"veleno\"].indexOf(x.toLowerCase())<0})"
+   },
+   "atteso": [],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C65",
+   "rif": "B-13",
+   "caso": "Editor armi, Resistenza concessa: nomi vecchi",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "ALL_DMG_TYPES.filter(function(x){return ['Taglio','Perforazione','Impatto','Radiante'].indexOf(x)>=0})"
+   },
+   "atteso": [],
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C66",
+   "rif": "B-13",
+   "caso": "Colpo di Scudo: tipo di danno (codice di CombatTab)",
+   "regola": "P-83",
+   "pg": null,
+   "calcolo": {
+    "f": "costante",
+    "espr": "(CombatTab.toString().match(/Colpo di Scudo\", \\[\\{ dice: \"1d3\", type: \"([^\"]+)\"/)||[])[1]"
+   },
+   "atteso": "Contundente",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C67",
+   "rif": "B-13",
+   "caso": "migrateCh: danno extra «Impatto» di un'arma magica (special)",
+   "regola": "P-83",
+   "pg": "vecchi_danni",
+   "calcolo": {
+    "f": "migrateCh",
+    "percorso": "equipment.weapons.0.special.extraDamage.0.damageType"
+   },
+   "atteso": "Contundente",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C68",
+   "rif": "B-13",
+   "caso": "migrateCh: resistenza «Radiante» di un'arma magica (special)",
+   "regola": "P-83",
+   "pg": "vecchi_danni",
+   "calcolo": {
+    "f": "migrateCh",
+    "percorso": "equipment.weapons.0.special.grantsResistance"
+   },
+   "atteso": "Radioso",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C69",
+   "rif": "B-13",
+   "caso": "migrateCh: campi a livello di arma (come la prova di REGIA)",
+   "regola": "P-83",
+   "pg": "vecchi_danni_arma",
+   "calcolo": {
+    "f": "migrateCh",
+    "percorso": "equipment.weapons.0.extraDamage.0.damageType"
+   },
+   "atteso": "Tagliente",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C70",
+   "rif": "B-08",
+   "caso": "Braccia di Hadar: dc.success",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "arms-of-hadar",
+    "campo": "dc.success"
+   },
+   "atteso": "half",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C71",
+   "rif": "B-08",
+   "caso": "Sfera Vetriolica: dc.success",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "vitriolic-sphere",
+    "campo": "dc.success"
+   },
+   "atteso": "half",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C72",
+   "rif": "B-08",
+   "caso": "Snervamento: dc.success",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "enervation",
+    "campo": "dc.success"
+   },
+   "atteso": "half",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C73",
+   "rif": "B-08",
+   "caso": "Prigione Mentale: dc.success",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "mental-prison",
+    "campo": "dc.success"
+   },
+   "atteso": "other",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C74",
+   "rif": "B-08",
+   "caso": "Drago Illusorio: dc",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "illusory-dragon",
+    "campo": "dc"
+   },
+   "atteso": {
+    "ability": "Intelligenza",
+    "success": "half"
+   },
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C75",
+   "rif": "B-08",
+   "caso": "Ira della Natura: damage.type",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "wrath-of-nature",
+    "campo": "damage.type"
+   },
+   "atteso": "tagliente",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C76",
+   "rif": "B-08",
+   "caso": "Ira della Natura: attack",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "wrath-of-nature",
+    "campo": "attack"
+   },
+   "atteso": null,
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C77",
+   "rif": "B-08",
+   "caso": "Trasmutare Roccia: dc",
+   "regola": "Manuale 2014 / Xanathar",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "transmute-rock",
+    "campo": "dc"
+   },
+   "atteso": {
+    "ability": "Destrezza",
+    "success": "half"
+   },
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C78",
+   "rif": "B-08",
+   "caso": "Fame di Hadar: dado base",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "hunger-of-hadar",
+    "campo": "damage.table.3"
+   },
+   "atteso": "2d6",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C79",
+   "rif": "B-08",
+   "caso": "Fame di Hadar: tipo",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "hunger-of-hadar",
+    "campo": "damage.type"
+   },
+   "atteso": "freddo",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C80",
+   "rif": "B-08",
+   "caso": "Fame di Hadar: l'acido negli effetti",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "hunger-of-hadar",
+    "campo": "effects"
+   },
+   "atteso": "acido",
+   "stato_10_1_1": "torna",
+   "confronto": "contiene"
+  },
+  {
+   "id": "C81",
+   "rif": "B-08",
+   "caso": "Onda Distruttiva: dado base",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "destructive-wave",
+    "campo": "damage.table.5"
+   },
+   "atteso": "5d6",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C82",
+   "rif": "B-08",
+   "caso": "Onda Distruttiva: tipo",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "destructive-wave",
+    "campo": "damage.type"
+   },
+   "atteso": "tuono",
+   "stato_10_1_1": "torna"
+  },
+  {
+   "id": "C83",
+   "rif": "B-08",
+   "caso": "Onda Distruttiva: radioso o necrotico negli effetti",
+   "regola": "PHB",
+   "pg": null,
+   "calcolo": {
+    "f": "incantesimo",
+    "id": "destructive-wave",
+    "campo": "effects"
+   },
+   "atteso": "necrotic",
+   "stato_10_1_1": "torna",
+   "confronto": "contiene"
+  }
+ ]
+}

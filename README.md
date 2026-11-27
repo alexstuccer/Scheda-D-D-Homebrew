@@ -6,7 +6,9 @@ Scheda per D&D 5e con le regole della casa, in un solo file HTML che funziona of
 |---|---|
 | `dashboard_v3.html` | Versione di produzione (9.11). |
 | `experimental/dashboard_10.4.1.html` | Versione di prova 10.4.1: nuova interfaccia con tre temi (Strumento, Pergamena, Arena), formato telefono e computer; la vecchia scheda resta come «Editor completo» per creazione e level-up. |
-| `src/` | Sorgente leggibile (React, JSX). |
+| `experimental/dashboard_10.7.8.html` | Versione di prova 10.7.8: privilegi di classe e talenti dai dati di ARCHETIPI e TALENTI, creazione e level-up nella nuova interfaccia, madrelingue, competenze aggiunte dal master, aumento di caratteristica, punti competenza che non scendono sotto zero. |
+| `src/` | Sorgente leggibile (React, JSX). `src/data/` contiene privilegi e talenti. |
+| `tests/` | Prove automatiche (Playwright): istruzioni in `tests/LEGGIMI.txt`. |
 | `build.py` | Compila `src/` in un file unico: `python3 build.py dashboard.html` (serve esbuild: `npm i esbuild`). |
 
 Per usare la scheda basta il file HTML: React, incantesimi e caratteri sono già dentro.

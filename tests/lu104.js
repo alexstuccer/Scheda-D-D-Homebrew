@@ -1,0 +1,37 @@
+const path = require("path"); const { chromium } = require("playwright");
+const URL = "file://" + path.resolve(process.argv[2]);
+(async () => {
+  const b = await chromium.launch({ executablePath: process.env.CHROME, args: ["--no-sandbox"] }); const errs = [];
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const p0 = await ctx.newPage(); await p0.goto(URL); await p0.waitForFunction(() => typeof INIT !== "undefined");
+  const d = await p0.evaluate(() => { const a = JSON.parse(JSON.stringify(INIT)); a.name = "Eliandra"; a.classes = [{ name: "Bardo", level: 4 }]; a.creationDone = true; a.locked = true;
+    a.stats = { Forza: 10, Destrezza: 14, Costituzione: 12, Intelligenza: 12, Saggezza: 10, Carisma: 16 };
+    const k = SD.findIndex((s) => s.n === "Persuasione"); a.skills[k] = { ...a.skills[k], rank: 5 }; a.savedPoints = 3;
+    return { d: { roster: { a }, order: ["a"], activeId: "a" }, k }; });
+  await p0.close();
+  await ctx.addInitScript((d) => { localStorage.setItem("characterDashboard_v2", JSON.stringify(d)); localStorage.setItem("ui_aspetto_v1", JSON.stringify({ theme: "str", v: "dark" })); }, d.d);
+  const pg = await ctx.newPage(); pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.goto(URL); await pg.waitForSelector(".gx");
+  await pg.locator(".gx-bnav button, nav button", { hasText: "Scheda" }).first().click(); await pg.waitForTimeout(200);
+  await pg.screenshot({ path: "/tmp/nui/scheda_comp.png" });
+  await pg.locator(".gx-search input").first().fill("persua"); await pg.waitForTimeout(150);
+  console.log("ricerca 'persua':", (await pg.locator(".gx-scroll .gx-row .nm, .gx-scroll .nm").allInnerTexts()).filter((t) => /ersua/.test(t)));
+  await pg.locator(".gx-search input").first().fill("");
+  await pg.getByRole("button", { name: "Level-up" }).click(); await pg.waitForTimeout(250);
+  console.log("level-up nella nuova interfaccia:", (await pg.locator(".gx-full").count()) > 0, "· editor vecchio:", (await pg.locator(".app").count()) > 0);
+  const pool = async () => (await pg.locator(".gx-pool").innerText()).replace(/\s+/g, " ");
+  console.log("punti:", await pool());
+  await pg.locator(".gx-full .gx-search input").fill("persuasione"); await pg.waitForTimeout(150);
+  const plus = pg.locator(".gx-full .gx-row").filter({ hasText: "Persuasione" }).locator("button[aria-label*='Aumenta'], button:has-text('+')").first();
+  for (let n = 0; n < 4; n++) { if (await plus.isEnabled()) await plus.click(); }
+  await pg.waitForTimeout(150);
+  console.log("Persuasione dopo 4 clic (max +2):", (await pg.locator(".gx-full .gx-row").filter({ hasText: "Persuasione" }).first().innerText()).replace(/\s+/g, " "), "·", await pool());
+  await pg.screenshot({ path: "/tmp/nui/levelup.png" });
+  await pg.locator(".gx-full select").selectOption("Mago"); await pg.waitForTimeout(150);
+  console.log("con Mago (nuova classe):", await pool());
+  await pg.locator(".gx-full select").selectOption("Bardo"); await pg.waitForTimeout(150);
+  await pg.getByRole("button", { name: "Applica" }).click(); await pg.waitForTimeout(250);
+  const r = await pg.locator(".gx").first().innerText();
+  console.log("dopo Applica: Bardo 5", /Bardo 5/.test(r));
+  console.log(errs.length ? "Errori: " + errs.join(" | ") : "Nessun errore JavaScript"); await b.close();
+})();

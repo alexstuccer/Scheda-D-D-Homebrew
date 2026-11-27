@@ -1,0 +1,37 @@
+const path = require("path"); const { chromium } = require("playwright");
+const URL = "file://" + path.resolve(process.argv[2]);
+(async () => {
+  const b = await chromium.launch({ executablePath: process.env.CHROME, args: ["--no-sandbox"] }); const errs = [];
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const p0 = await ctx.newPage(); await p0.goto(URL); await p0.waitForFunction(() => typeof INIT !== "undefined");
+  const d = await p0.evaluate(() => { const a = JSON.parse(JSON.stringify(INIT)); a.name = "Brann"; a.classes = [{ name: "Guerriero", level: 1 }]; a.creationDone = true; a.locked = true;
+    a.stats = { Forza: 14, Destrezza: 15, Costituzione: 14, Intelligenza: 10, Saggezza: 12, Carisma: 8 };
+    const k = SD.findIndex((s) => s.n === "Archi"); a.skills[k] = { ...a.skills[k], rank: 1 };
+    a.equipment = { ...a.equipment, weapons: [{ id: "arco_lungo", name: "Arco lungo", qty: 1, equipped: true }] };
+    return { roster: { a }, order: ["a"], activeId: "a" }; });
+  await p0.close();
+  await ctx.addInitScript((d) => { if (!sessionStorage.getItem("seed")) { sessionStorage.setItem("seed", "1"); localStorage.setItem("characterDashboard_v2", JSON.stringify(d)); } localStorage.setItem("ui_aspetto_v1", JSON.stringify({ theme: "str", v: "dark" })); }, d);
+  const pg = await ctx.newPage(); pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.goto(URL); await pg.waitForSelector(".gx");
+  const hit = async () => { await pg.locator(".gx-bnav button, nav button", { hasText: "Attacchi" }).first().click(); await pg.waitForTimeout(150); return (await pg.locator(".gx-scroll").innerText()).match(/Per colpire\s*([+−-]\d+)/); };
+  console.log("per colpire prima:", (await hit() || [])[1]);
+  const lu = async () => { await pg.locator(".gx-bnav button, nav button", { hasText: "Scheda" }).first().click(); await pg.getByRole("button", { name: "Level-up" }).click(); await pg.waitForTimeout(200); };
+  await lu();
+  await pg.getByRole("button", { name: "Bonus fissi" }).click();
+  await pg.locator(".gx-full .gx-search input").fill("archi");
+  const plus = pg.locator(".gx-full .gx-row").filter({ hasText: "Archi", has: pg.locator("button[aria-label='Più']") }).first().locator("button[aria-label='Più']");
+  await plus.click(); await plus.click();
+  await pg.locator(".gx-full .gx-search input").fill("");
+  await pg.getByRole("button", { name: /Bonus e PF/ }).click();   // 10.7.7
+  await pg.locator("[aria-label='Bonus o malus al modificatore di Destrezza'] button[aria-label='Più']").click();
+  await pg.screenshot({ path: "/tmp/nui/lu_bonus.png" });
+  await pg.getByRole("button", { name: "Annulla" }).click(); await pg.waitForTimeout(200);
+  console.log("dopo Annulla, per colpire:", (await hit() || [])[1]);
+  await lu();
+  await pg.getByRole("button", { name: "Bonus fissi" }).click();
+  await pg.locator(".gx-full .gx-search input").fill("archi");
+  await plus.click(); await plus.click();
+  await pg.getByRole("button", { name: "Applica" }).click(); await pg.waitForTimeout(200);
+  console.log("dopo Applica con +2, per colpire:", (await hit() || [])[1]);
+  console.log(errs.length ? "Errori: " + errs.join(" | ") : "Nessun errore JavaScript"); await b.close();
+})();

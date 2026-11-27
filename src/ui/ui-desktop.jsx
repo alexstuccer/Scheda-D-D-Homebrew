@@ -1,6 +1,7 @@
 /* ui-desktop.jsx · La Gemma di San Batacchio · strato nuovo, parti di DESKTOP (strada D, pacchetto 0)
    Contratto di useCharacter 2.1 (tab REGIA — Pacchetto 0).
    Contiene: <Pannelli C={C} onMenu onAspetto attivo />  cornice da 768 px: Stato, una o due schermate, Tiri da 1280 px
+             <GxdCompetenze C={C} />                    vista estesa delle competenze (quinta schermata, solo nella cornice)
              useScorciatoie(…)                          scorciatoie da tastiera
              <Stampa C={C} />                           Scheda a due colonne per la stampa A4
    NuovaUI (ui-new.jsx, MOBILE) inietta GXD_CSS dopo GX_CSS, monta Pannelli da 768 px e Stampa a ogni larghezza,
@@ -40,12 +41,30 @@ const GXD_CSS = `
 .gxd-esito{margin:12px 12px 0;padding:12px;border:1px solid var(--acc);border-radius:var(--radius);background:var(--s2);display:flex;flex-direction:column;gap:4px}
 .gxd-esito small{font-size:13px;color:var(--muted)}
 .gxd-esito b{font-family:var(--font-num);font-size:52px;line-height:1;font-weight:600}
+.gxd-esito b.gx-nat20{color:var(--acc)}
 .gxd-dadi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 12px 0}
 .gxd-dadi .gx-btn{min-width:0;padding:0 6px}
 .gxd-dadi .d20{grid-column:span 2}
 .gxd-keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
 .gxd-keys kbd{font-family:var(--font-num);font-size:13px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--s2);white-space:nowrap}
 .gxd-vuota{margin:24px 12px;padding:16px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted);font-size:14px}
+.gxd-sk{width:100%;border-collapse:collapse;font-size:14px}
+.gxd-sk th{position:sticky;top:0;z-index:1;background:var(--s1);font-family:var(--font-label);text-transform:var(--label-tt);letter-spacing:var(--label-ls);font-size:11px;font-weight:600;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.gxd-sk th:first-child,.gxd-sk td:first-child{text-align:left;padding-left:12px}
+.gxd-sk th:last-child,.gxd-sk td:last-child{padding-right:12px}
+.gxd-sk td{padding:3px 4px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.gxd-sk td:first-child{font-family:var(--font-ui);white-space:normal}
+.gxd-sk td.z{color:var(--muted);opacity:.55}
+.gxd-sk td.car{font-family:var(--font-label);font-size:11px;color:var(--muted);text-align:left}
+.gxd-sk tr.cat td{background:var(--s2);font-family:var(--font-label);text-transform:var(--label-tt);letter-spacing:var(--label-ls);font-size:12px;font-weight:600;color:var(--ink);cursor:pointer}
+.gxd-sk tr.cat td small{color:var(--muted);font-weight:400;margin-left:8px}
+.gxd-sk tr.cat td.tot{text-align:right;font-family:var(--font-num)}
+.gxd-sk td.ovr{color:var(--acc);font-weight:600}
+.gxd-sk .gxd-tot{min-width:44px;height:26px;border:1px solid var(--line);border-radius:calc(var(--radius) - 2px);font-family:var(--font-num);font-weight:600;font-size:15px;color:var(--ink);background:var(--s2)}
+.gxd-sk .gxd-tot:hover{border-color:var(--acc)}
+.gxd-skbar{display:flex;gap:8px;align-items:center;margin:8px 12px}
+.gxd-skbar .gx-search{flex:1;margin:0}
+.gxd-legenda{margin:4px 12px 8px;font-size:12px;color:var(--muted)}
 @media (pointer:fine){.gxd-navw{display:none}}
 @media (pointer:coarse){.gxd-top{display:none}.gxd-pf input{min-height:44px}}
 
@@ -54,7 +73,7 @@ const GXD_CSS = `
 .gxd-print{display:none}
 @media print{
   @page{size:A4;margin:12mm}
-  html,body,#root{height:auto!important;background:#fff!important}
+  html,body,#root,.gx-dash{height:auto!important;background:#fff!important}
   .gx{height:auto!important;display:block!important;background:#fff!important;background-image:none!important;color:#111!important}
   .gx>*:not(.gxd-print){display:none!important}
   .gx>.gxd-print{display:block!important}
@@ -87,15 +106,16 @@ const GXD_CSS = `
 .gxd-print .p-chk{display:inline-block;width:8pt;height:8pt;border:.8pt solid #333;margin-right:2pt;vertical-align:-1pt}
 .gxd-print .p-chk.on{background:#333}
 .gxd-print .p-lines div{border-bottom:.5pt solid #bbb;height:13pt}
+.gxd-print .p-note{white-space:pre-wrap;font-size:9pt;line-height:1.3}
 `;
 
 /* ═══ COSTANTI DI INTERFACCIA ═══ */
-const GXD_SCHERMATE = [["sessione", "Sessione"], ["attacchi", "Attacchi"], ["magia", "Magia"], ["scheda", "Scheda"]];
+const GXD_SCHERMATE = [["sessione", "Sessione"], ["attacchi", "Attacchi"], ["magia", "Magia"], ["scheda", "Scheda"], ["competenze", "Competenze"]];
 const GXD_MODI = { v: "vantaggio", n: "normale", s: "svantaggio" };
 const GXD_DADI = [4, 6, 8, 10, 12, 100];
 const GXD_CHIAVE = "ui_desktop_v1"; // coppia di schermate del monitor grande, per dispositivo
 const GXD_TASTI = [
-  ["1 · 2 · 3 · 4", "Sessione, Attacchi, Magia, Scheda (sul monitor grande apre nella colonna usata meno di recente)"],
+  ["1 · 2 · 3 · 4 · 5", "Sessione, Attacchi, Magia, Scheda, Competenze (sul monitor grande apre nella colonna usata meno di recente)"],
   ["V · N · S", "Tiro con vantaggio, normale, con svantaggio"],
   ["T", "d20 libero"],
   ["I", "Tira l'iniziativa"],
@@ -112,7 +132,10 @@ function gxdKg(v) { return v == null ? "" : String(v).replace(".", ","); }
 function gxdTesto(r) { return gxDadi(r) ? "[" + gxDadi(r) + "]" + (r.mod ? " " + fm(r.mod) : "") : (r.mod ? fm(r.mod) : ""); }
 function gxdLeggi(chiave) { try { return JSON.parse(localStorage.getItem(chiave) || "null"); } catch (e) { return null; } }
 function gxdScrivi(chiave, v) { try { localStorage.setItem(chiave, JSON.stringify(v)); } catch (e) { } }
-function gxdSchermata(key) { return typeof SCHERMATE !== "undefined" && SCHERMATE ? SCHERMATE[key] || null : null; }
+function gxdSchermata(key) {
+  if (key === "competenze") return GxdCompetenze;
+  return typeof SCHERMATE !== "undefined" && SCHERMATE ? SCHERMATE[key] || null : null;
+}
 
 function useGxdMedia(q) {
   var init = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false;
@@ -192,8 +215,16 @@ function GxdStato(props) {
 }
 
 /* ═══ COLONNA TIRI (da 1280 px; sotto c'è PannelloTiri a destra) ═══ */
+function gxdDadiVis(r) {
+  // come lo storico di MOBILE: con vantaggio/svantaggio il dado tenuto in grassetto, l'altro barrato
+  var d = typeof gxDadiVis === "function" ? gxDadiVis(r) : gxDadi(r);
+  return <React.Fragment>{d}{r.mod ? " " + fm(r.mod) : ""}</React.Fragment>;
+}
 function GxdTiri(props) {
   var C = props.C;
+  var svuota = function () {
+    if (window.confirm("Svuotare lo storico dei tiri di questo personaggio?")) C.act.clearRolls();
+  };
   var storia = C.roll.history.slice(0, 20); // il più recente è history[0]
   var ult = storia.length ? storia[0] : null;
   var tira = function (n) { C.act.roll(n === 20 ? "d20 libero" : "d" + n, 0, { die: n }); };
@@ -203,8 +234,8 @@ function GxdTiri(props) {
       <div className="gxd-esito" role="status" aria-live="polite">
         {ult ? (
           <React.Fragment>
-            <small>{ult.label + (gxdTesto(ult) ? " · " + gxdTesto(ult) : "")}</small>
-            <b>{ult.total}</b>
+            <small>{ult.label}{gxdTesto(ult) ? " · " : ""}{gxdTesto(ult) ? gxdDadiVis(ult) : null}</small>
+            <b className={ult.crit ? "gx-nat20" : null}>{ult.total}</b>
             <small>{C.roll.mode}</small>
           </React.Fragment>
         ) : <small>Nessun tiro in questa sessione</small>}
@@ -216,9 +247,91 @@ function GxdTiri(props) {
       <Section label="Storico" aux={storia.length ? "ultimi " + storia.length : null} />
       <Card>
         {storia.length ? storia.map(function (r, i) {
-          return <Row key={r.t || i} name={r.label} sub={gxdTesto(r)}><b className="gx-val">{r.total}</b></Row>;
+          return <Row key={r.t || i} name={r.label} sub={gxdDadiVis(r)}><b className={"gx-val" + (r.crit ? " gx-nat20" : "")}>{r.total}</b></Row>;
         }) : <Row name={<small>Vuoto</small>} />}
       </Card>
+      {storia.length && typeof C.act.clearRolls === "function" ? (
+        <div className="gxd-skbar"><Btn kind="q" onClick={svuota}>Svuota lo storico</Btn></div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ═══ VISTA ESTESA DELLE COMPETENZE (quinta schermata della cornice) ═══
+   Una tabella per tutte le competenze, divise per categoria: caratteristica, rank, bonus del rank (Bon), affinità (Aff),
+   modificatore di caratteristica (+Car), B/M, modificatori fissi (Fissi), oggetti (Ogg.), totale, costo per rank.
+   Legge solo C.skills e C.cats. Le righe di categoria sommano rank e punti spesi delle competenze mostrate: è una
+   somma di valori già in C, non un calcolo di regole. La colonna Spesi compare solo se C.skills porta «spent». */
+function gxdNum(v, segno) {
+  if (v == null || v === 0) return { t: "·", z: true };
+  return { t: segno ? fm(v) : String(v), z: false };
+}
+function GxdCompetenze(props) {
+  var C = props.C;
+  var q0 = React.useState(""), q = q0[0], setQ = q0[1];
+  var r0 = React.useState(false), soloRank = r0[0], setSoloRank = r0[1];
+  var c0 = React.useState({}), chiuse = c0[0], setChiuse = c0[1];
+  var t = q.trim().toLowerCase();
+  var byI = {};
+  C.skills.forEach(function (s) { byI[s.i] = s; });
+  var conSpesi = C.skills.some(function (s) { return typeof s.spent === "number"; });
+  var gruppi = C.cats.map(function (c) {
+    var catOk = t && c.name.toLowerCase().indexOf(t) >= 0;
+    var sk = c.items.map(function (i) { return byI[i]; }).filter(function (s) {
+      if (!s) return false;
+      if (soloRank && !(s.rank || s.bonus || s.tal || s.im)) return false;
+      return !t || catOk || s.name.toLowerCase().indexOf(t) >= 0;
+    });
+    var rank = 0, spesi = 0;
+    sk.forEach(function (s) { rank += s.rank || 0; spesi += s.spent || 0; });
+    return { name: c.name, skills: sk, rank: rank, spesi: spesi };
+  }).filter(function (g) { return g.skills.length; });
+  var cella = function (v, segno) { var n = gxdNum(v, segno); return <td className={n.z ? "z" : null}>{n.t}</td>; };
+  var colonne = conSpesi ? 12 : 11;
+  return (
+    <div>
+      <Section label="Competenze" aux={C.skills.length + " · " + C.cats.length + " categorie"} />
+      <div className="gxd-skbar">
+        <SearchField value={q} onChange={setQ} placeholder="Cerca competenza o categoria" />
+        <Chip on={soloRank} onClick={function () { setSoloRank(!soloRank); }}>Solo con rank o bonus</Chip>
+      </div>
+      <div className="gxd-legenda">Bon: bonus del rank · Aff: affinità · +Car: modificatore di caratteristica · B/M: bonus e malus · Fissi: modificatori fissi · Ogg.: oggetti · Costo: punti per rank. Il totale tira la prova.</div>
+      <table className="gxd-sk">
+        <thead><tr><th>Competenza</th><th style={{ textAlign: "left" }}>Car.</th><th>Rank</th><th>Bon</th><th>Aff</th><th>+Car</th>
+          <th>B/M</th><th>Fissi</th><th>Ogg.</th><th>Tot</th><th>Costo</th>{conSpesi ? <th>Spesi</th> : null}</tr></thead>
+        {gruppi.length ? gruppi.map(function (g) {
+          var aperta = !!t || !chiuse[g.name];
+          return (
+            <tbody key={g.name}>
+              <tr className="cat" onClick={function () { var n = Object.assign({}, chiuse); n[g.name] = aperta; setChiuse(n); }}>
+                <td colSpan={2}>{(aperta ? "⌄ " : "› ") + g.name}<small>{g.skills.length}</small></td>
+                <td className="tot" title="Somma dei rank della categoria">{g.rank || "·"}</td>
+                <td colSpan={colonne - 4} />
+                {conSpesi ? <td className="tot" title="Punti spesi nella categoria">{g.spesi || "·"}</td> : <td />}
+              </tr>
+              {aperta ? g.skills.map(function (s) {
+                var ovr = s.costOverride != null;
+                return (
+                  <tr key={s.i}>
+                    <td>{s.name}</td>
+                    <td className="car">{s.attr}</td>
+                    {cella(s.rank, false)}
+                    {cella(s.bl, true)}
+                    {cella(s.maxAff, true)}
+                    {cella(s.sm2, true)}
+                    {cella(s.bonus, true)}
+                    {cella(s.tal, true)}
+                    {cella(s.im, true)}
+                    <td><button className={"gxd-tot " + tone(s.tot)} aria-label={"Prova di " + s.name} onClick={function () { C.act.roll(s.name, s.tot); }}>{fm(s.tot)}</button></td>
+                    <td className={ovr ? "ovr" : null} title={ovr ? "Costo cambiato dal Master; costo di classe " + s.classCost : null}>{s.cost}</td>
+                    {conSpesi ? cella(s.spent, false) : null}
+                  </tr>
+                );
+              }) : null}
+            </tbody>
+          );
+        }) : <tbody><tr><td colSpan={colonne}>Nessuna competenza trovata.</td></tr></tbody>}
+      </table>
     </div>
   );
 }
@@ -262,7 +375,7 @@ function useScorciatoie(o) {
       if (k === "Escape") { if (x.chiudi()) e.preventDefault(); return; } // gli Sheet di MOBILE chiudono da sé
       if (e.ctrlKey || e.metaKey || e.altKey || gxdInCampo(e.target) || gxdPannelloAperto()) return;
       var l = k.length === 1 ? k.toLowerCase() : k;
-      if (l === "1" || l === "2" || l === "3" || l === "4") { x.vai(GXD_SCHERMATE[parseInt(l, 10) - 1][0]); e.preventDefault(); return; }
+      if (l === "1" || l === "2" || l === "3" || l === "4" || l === "5") { x.vai(GXD_SCHERMATE[parseInt(l, 10) - 1][0]); e.preventDefault(); return; }
       if (GXD_MODI[l]) { C.act.setMode(GXD_MODI[l]); e.preventDefault(); return; }
       if (l === "t") { C.act.roll("d20 libero", 0, { die: 20 }); e.preventDefault(); return; }
       if (l === "i") { C.act.roll("Iniziativa", C.init); e.preventDefault(); return; }
@@ -328,6 +441,8 @@ function Pannelli(props) {
     return (
       <main key={cls} className={cls} aria-label={key}>
         <div className="gxd-scr">
+          {dito && key === "scheda" ? <div className="gxd-skbar"><Btn kind="q" onClick={function () { vai("competenze"); }}>Vista estesa delle competenze</Btn></div> : null}
+          {dito && key === "competenze" ? <div className="gxd-skbar"><Btn kind="q" onClick={function () { vai("scheda"); }}>Torna alla Scheda</Btn></div> : null}
           {S ? <S C={C} wide={true} tiri={medio} /> :
             <div className="gxd-vuota">{"Schermata «" + key + "» di ui-new.jsx non trovata."}</div>}
         </div>
@@ -359,7 +474,7 @@ function Pannelli(props) {
 
       {dito ? (
         <div className="gxd-navw">
-          <BottomNav current={stato.posti[stato.ultimo]} onGo={vai} onDice={function () { if (!medio) setPan("tiri"); }} />
+          <BottomNav current={stato.posti[stato.ultimo] === "competenze" ? "scheda" : stato.posti[stato.ultimo]} onGo={vai} onDice={function () { if (!medio) setPan("tiri"); }} />
         </div>
       ) : null}
 
@@ -387,6 +502,7 @@ function Stampa(props) {
   var STATS = ["Forza", "Destrezza", "Costituzione", "Intelligenza", "Saggezza", "Carisma"];
   var MONETE = [["mp", "Platino"], ["mo", "Oro"], ["me", "Electrum"], ["ma", "Argento"], ["mr", "Rame"]];
   var spells = C.spells || [], monete = eq.coins || {}, carico = eq.load;
+  var modAttivi = (C.modifiers || []).filter(function (m) { return m.attivo !== false; });
   var livelli = [];
   spells.forEach(function (s) { if (livelli.indexOf(s.level) < 0) livelli.push(s.level); });
   livelli.sort(function (a, b) { return a - b; });
@@ -410,6 +526,7 @@ function Stampa(props) {
             <div className="p-box"><span>PM</span><b>{C.pm.max}</b><i>{"Soglia " + C.pm.soglia + "°"}</i></div>
             <div className="p-box"><span>PM patto</span><b>{C.pm.pact ? C.pm.pact.max : "—"}</b><i>{C.pm.pact ? "Soglia " + C.pm.pact.soglia + "°" : ""}</i></div>
           </div>
+          {C.ca.testo ? <div className="p-sub" style={{ marginTop: "3pt" }}>{"CA " + C.ca.total + " = " + C.ca.testo}</div> : null}
         </div>
 
         <div>
@@ -449,8 +566,12 @@ function Stampa(props) {
               <h2>Privilegi</h2>
               <table><tbody>
                 {C.features.map(function (f) {
-                  return <tr key={f.key}><td>{f.name}<div className="p-sub">{f.cls + " " + f.lv + (f.dc ? " · CD " + f.dc : "")}</div></td>
-                    <td>{f.uses && f.uses.max ? caselle(f.uses.max) : null}</td></tr>;
+                  var sub = [f.fonte && f.fonte !== f.name ? f.fonte : null, [f.cls, f.lv].filter(Boolean).join(" "),
+                    f.recupero, f.dc ? "CD " + f.dc : null].filter(Boolean).join(" · ");
+                  var usi = f.illimitato ? "illimitato" : !f.uses || !f.uses.max ? null
+                    : f.uses.max <= 10 ? caselle(f.uses.max) : "____ / " + f.uses.max;
+                  return <tr key={f.key}><td>{f.name}{sub ? <div className="p-sub">{sub}</div> : null}</td>
+                    <td className="n">{usi}</td></tr>;
                 })}
               </tbody></table>
             </React.Fragment>
@@ -478,6 +599,8 @@ function Stampa(props) {
             </table>
           ) : <div className="p-sub">Nessuno</div>}
 
+          {C.notes ? <React.Fragment><h2>Note</h2><div className="p-note">{C.notes}</div></React.Fragment> : null}
+
           <h2>Condizioni e note in sessione</h2>
           <div className="p-lines"><div /><div /><div /><div /><div /></div>
         </div>
@@ -490,7 +613,7 @@ function Stampa(props) {
             {C.cats.map(function (cat) {
               return <div key={cat.name} className="p-cat"><b>{cat.name}</b>
                 {cat.items.map(function (i) {
-                  var s = C.skills[i] || {};
+                  var s = C.skills.filter(function (x) { return x.i === i; })[0] || {};   // C.skills salta le voci senza nome: si cerca per i
                   return <div key={i} className={"p-sk" + (s.rank ? "" : " z")}><span>{s.name}</span><span>{s.rank || "·"}</span><span>{fm(s.tot)}</span></div>;
                 })}
               </div>;
@@ -516,8 +639,17 @@ function Stampa(props) {
               return <tr key={m[0]}><td>{m[1]}</td><td className="n">{monete[m[0]] || 0}</td><td className="n">____</td></tr>;
             })}
           </tbody></table>
-          <h2>Note</h2>
-          <div className="p-lines"><div /><div /><div /></div>
+          {modAttivi.length ? (
+            <React.Fragment>
+              <h2>Modificatori fissi attivi</h2>
+              <table><tbody>
+                {modAttivi.map(function (m) {
+                  return <tr key={m.id}><td>{m.nome || "Senza nome"}<div className="p-sub">{[m.fonte, (m.bersagliNomi || []).join(", "), m.note].filter(Boolean).join(" · ")}</div></td>
+                    <td className="n">{fm(m.valore | 0)}</td></tr>;
+                })}
+              </tbody></table>
+            </React.Fragment>
+          ) : null}
         </div>
       </section>
     </div>

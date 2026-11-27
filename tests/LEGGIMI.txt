@@ -1,0 +1,22 @@
+Test della scheda (REGIA, aggiornato il 21/11/2026, 10.7). Servono Node, Playwright e Chrome:
+  npm i playwright ; CHROME=/percorso/chrome node <script> <scheda.html> [argomenti]
+
+arbitro_p0_104.js  <html> casi_arbitro.json   Script di ARBITRO (83 casi). Apre la pagina con #editor (vecchia interfaccia).
+                                               Atteso sulla 10.5: 75 OK, 8 attesi, 0 regressioni.
+nuova_ui_104.js    <html> casi_arbitro.json <cartella_screenshot>
+                                               Confronta i valori della vecchia interfaccia con quelli di useCharacter (C)
+                                               sui PG di ARBITRO (CA, velocità, PF, per colpire). Atteso: 83 uguali.
+v105.js            <html> 390|1280            Percorso completo: creazione guidata, catalogo armi, proprietà, Archery,
+                                               modificatore di iniziativa, catalogo incantesimi, Modifica scheda (Master).
+e107.js            <html>                     Motore di privilegi e talenti su useCharacter (senza interfaccia): scelte, prerequisiti,
+                                               rank gratis e sconto (P-100), usi (P-101), P-104, alternative, prezzo e acquisto
+                                               dei talenti al level-up (P-102, P-103), addestramento, schede della 10.6. Atteso: tutto OK.
+v107.js            <html> 390|1280            Interfaccia: CA in dettaglio (N-01), archivio, modificatore sospeso, talento al level-up
+                                               con scelta, prezzo e accordo del master. Atteso: tutto OK. SHOT=prefisso salva le schermate.
+punti.js           <html>                     10.7.8: i punti competenza non scendono sotto zero (caratteristica abbassata, classe,
+                                               costo forzato, multiclasse al level-up). Atteso: tutto OK.
+lu104.js, lu_bonus.js  <html>                  Level-up: punti, limite di rank, bonus fissi, Annulla.
+note.js, mobile_fix.js, formato.js, nuova_ui_cornice.js   prove mirate delle versioni 10.4.x.
+flusso104.js                                   superato dalla 10.5 (apriva l'editor completo, che non c'è più): fallisce anche sulla 10.6.
+I dati di privilegi e talenti stanno in src/data: privilegi.json (ARCHETIPI) e talenti.json (TALENTI). Li pubblicano le due chat.
+casi_arbitro.json                              Casi di ARBITRO; C19 aggiornato a 2 per la decisione P-97.

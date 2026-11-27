@@ -1,6 +1,6 @@
 
 const { useState, useMemo, useRef, useEffect } = React;
-const APP_VERSION = "10.4.1"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
+const APP_VERSION = "10.7.8"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
 try { document.title = "La Gemma di San Batacchio · v" + APP_VERSION; } catch (e) {}
 // Altezza della barra campagna (sticky) in --dash-h: serve alle intestazioni sticky delle competenze.
 (function() {
@@ -390,14 +390,15 @@ function overcastDamage(level, outcome) {
   return level * mult;
 }
 
-function computeAll(skills, statMods, meleeA, magicA) {
+function computeAll(skills, statMods, meleeA, magicA, sdList) {
+  const sdL = sdList || SD;   // 10.7.4: con le competenze aggiunte dal master la lista è quella del personaggio (SD + ch.skExtra)
   const pass1 = skills.map((sk, i) => {
-    const sd = SD[i];
+    const sd = sdL[i];
     if (!sd) return { ...sk, idx: i, bl: 0, parz: -3, rank: 0, attr: "Forza", cat: "?", sub: "", aff: "sep", name: "?" };
     const rank = sk.rank || 0;
     const attr = sk.ao || resolveAttr(sd, meleeA, magicA);
     const bl2 = bonusLvl(rank);
-    const zeroPen = rank === 0 ? -3 : 0;
+    const zeroPen = rank === 0 && sd.c !== "Tiri Salvezza" ? -3 : 0;   // tiri salvezza senza rank: solo il modificatore (P-97, modifica P-34)
     const parz = bl2 + zeroPen;
     return { ...sk, idx: i, bl: bl2, parz, rank, attr, cat: sd.c, sub: sd.s || "", aff: sd.f, name: sk.cn || sd.n };
   });
@@ -437,6 +438,8 @@ function getSkillCost(sk, sd, cls) {
   return sd && sd.k ? (sd.k[cls] || 2) : 2;
 }
 
+/* P-110 (21/11/2026, Alessandro): la base B è 9 m per tutte le razze; la differenza la fanno altezza, Destrezza e Forza (R1.8bis). */
+const VEL_BASE = 9;
 function calcVel(base, height, modDes, modFor) {
   const f = base * 2/3;
   const hf = (height - 60) / 100;
@@ -829,6 +832,7 @@ const INIT = {
   },
   locked: false, creationDone: false,
   savedPoints: 0, lvlUp: null,
+  notes: "",   // note libere del giocatore (10.4.3)
 };
 
 /* ═══ CSS ═══ */
@@ -2604,7 +2608,7 @@ function App({ ch, setCh, onRoll, onRollDamage }) {
     setCh({...ch, raceId:id, raceChoices: new Array(r2.cc||0).fill("")});
   };
 
-  const velBase = calcVel(race.speed||9, ch.height||170, dexCA, statMods.Forza||0) + (race.speedAdd||0);
+  const velBase = calcVel(VEL_BASE, ch.height||170, dexCA, statMods.Forza||0) + (race.speedAdd||0);
   const velOverload = equipWeight(ch.equipment) > (ch.stats.Forza||8) * 7.5;
   const velFinal = velOverload ? Math.floor(velBase) / 2 : velBase;   // P-80
   const hpMax = useMemo(() => calcHP(ch.classes, getFM("Costituzione"), ch.hpBonus||0), [ch.classes, ch.stats, rb, ch.bm, ch.hpBonus]);
@@ -3914,7 +3918,9 @@ function Dashboard(){
   // Interruttore «Nuova interfaccia» (pacchetto 0): ricordato su questo dispositivo
   // Dalla 10.4 l'interfaccia è una sola (la nuova, con i tre temi). Il vecchio editor si apre solo per creazione,
   // level-up e modifiche che la nuova non fa ancora, e si chiude con «Torna alla scheda». Non si ricorda tra le sessioni.
-  const [editorCompleto, setEditorCompleto] = useState(function(){ try { return location.hash === "#editor"; } catch(e){ return false; } });   // #editor: apre il vecchio editor (serve ai test di ARBITRO)
+  // Dalla 10.5 la vecchia interfaccia non si apre più dalla scheda: resta solo con #editor nell'indirizzo, per lo script di ARBITRO,
+  // finché i test non leggono direttamente le regole (Pacchetto 1). Si cancella con il refactoring della 11.0.
+  const [editorCompleto, setEditorCompleto] = useState(function(){ try { return location.hash === "#editor"; } catch(e){ return false; } });
   let nuovaUI = !editorCompleto;
   const toggleNuovaUI = function(on){ setEditorCompleto(!on); };
   const aspDash = useAspettoCondiviso();   // tema della nuova grafica anche per barra, tab dei PG e pagina iniziale
@@ -4406,6 +4412,8 @@ function Dashboard(){
     setRollFlash(function(f){ return f + 1; });
   }
 
+  // 10.7: svuota lo storico di un solo personaggio (nuova interfaccia, C.act.clearRolls); la conferma la chiede l'interfaccia
+  function clearRollsOf(pg){ setRolls(function(prev){ return prev.filter(function(r){ return r.pg && r.pg !== pg; }); }); }
   function clearRolls(){
     if (rolls.length === 0) return;
     if (!window.confirm("Azzerare lo storico dei tiri?")) return;
@@ -5142,8 +5150,8 @@ function Dashboard(){
 
       {ch ? (
         nuovaUI ? (
-          <NuovaUIHost key={activeId} ch={ch} setCh={setCh} onClassica={function(){ toggleNuovaUI(false); }}
-            env={{ roll: doRoll, rollDamage: doRollDamage, rolls: rolls, mode: rollMode, setMode: setRollMode,
+          <NuovaUIHost key={activeId} ch={ch} setCh={setCh} onClassica={null}
+            env={{ roll: doRoll, rollDamage: doRollDamage, rolls: rolls, mode: rollMode, setMode: setRollMode, clearRolls: clearRollsOf,
                    undo: doUndo, redo: doRedo, canUndo: !!canUndo, canRedo: !!canRedo }}/>
         ) : (
           <App key={activeId} ch={ch} setCh={setCh} onRoll={doRoll} onRollDamage={doRollDamage}/>

@@ -1,6 +1,6 @@
 
 const { useState, useMemo, useRef, useEffect } = React;
-const APP_VERSION = "10.7.9"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
+const APP_VERSION = "10.7.10"; // ← unica fonte della versione. Bump a ogni cambiamento importante.
 try { document.title = "La Gemma di San Batacchio · v" + APP_VERSION; } catch (e) {}
 // Altezza della barra campagna (sticky) in --dash-h: serve alle intestazioni sticky delle competenze.
 (function() {
